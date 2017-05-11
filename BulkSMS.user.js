@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name        Send Bulk SMS
-// @namespace   Send-Bulk-SMS
+// @namespace   https://github.com/abusalam
+// @description Send Bulk SMS using AjaxQueue for PPDS
 // @include     http://localhost/ppds/send-sms.php
-// @version     1
+// @version     1.0.1
 // @grant       none
 // @downloadURL https://github.com/abusalam/UserScripts/raw/master/BulkSMS.user.js
 // @updateURL   https://github.com/abusalam/UserScripts/raw/master/BulkSMS.user.js

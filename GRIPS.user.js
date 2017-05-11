@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name        Submit HRA using GRIPS
 // @namespace   https://github.com/abusalam
+// @description Auto Submission and Generation of Challan for HRA
 // @include     https://wbifms.gov.in/GRIPS/*
-// @version     1.2
+// @version     1.2.1
 // @grant       none
 // @downloadURL https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
 // @updateURL   https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
