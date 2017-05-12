@@ -3,7 +3,7 @@
 // @namespace   https://github.com/abusalam
 // @description Retrieve List of IntraNIC Directory in JSON Format
 // @include     https://intranic.nic.in/portalnic/intranic4/portal_new/directorysearch
-// @version     1.0.2
+// @version     1.0.3
 // @grant       none
 // @downloadURL https://github.com/abusalam/UserScripts/raw/master/IntraNIC.user.js
 // @updateURL   https://github.com/abusalam/UserScripts/raw/master/IntraNIC.user.js
@@ -350,6 +350,7 @@ jQueryInclude(function () {
    * Main Functions to Retrieve IntraNIC Directory Contacts
    */
   localStorage.setItem('Serial', 0);
+  localStorage.setItem('EmpCount',0);
   var listEmp = [];
   var Designation = {
     'Value': '',
@@ -380,8 +381,9 @@ jQueryInclude(function () {
         try {
           if (Page === 1) {
             jQ(data).find('.head').each(function (Index, Item) {
-              var EmpCount = jQ(Item).html();
-              var PageCount = Math.ceil(parseInt(jQ.trim(EmpCount.replace(/[^0-9]/g, ''))) / 10);
+              var EmpCount = parseInt(jQ.trim(jQ(Item).html().replace(/[^0-9]/g, '')));
+              localStorage.setItem('EmpCount', parseInt(localStorage.getItem('EmpCount')) + EmpCount );
+              var PageCount = Math.ceil(EmpCount / 10);
               while (Page < PageCount) {
                 Page++;
                 GetEmpListByDesignation(Desg, Page);
@@ -443,7 +445,8 @@ jQueryInclude(function () {
       },
       complete : function(jqXHR, textStatus){
         jQ('#Info').html('Complete ' + Desg.Description + '[' + Desg.Value + ']:Page-' + Page);
-        jQ('#Info').append('<br/>Waiting:' + AjaxQueue.waiting().length);
+        jQ('#Info').append('<br/>Waiting: ' + AjaxQueue.waiting().length);
+        jQ('#Info').append('<br/>Records: ' + localStorage.getItem('Serial') + '/' + localStorage.getItem('EmpCount'));
 
         jQ('.itemSerial').css({
           'font-size': '30px',
