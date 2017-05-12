@@ -3,7 +3,7 @@
 // @namespace   https://github.com/abusalam
 // @description Retrieve List of IntraNIC Directory in JSON Format
 // @include     https://intranic.nic.in/portalnic/intranic4/portal_new/directorysearch
-// @version     1.0.1
+// @version     1.0.2
 // @grant       none
 // @downloadURL https://github.com/abusalam/UserScripts/raw/master/IntraNIC.user.js
 // @updateURL   https://github.com/abusalam/UserScripts/raw/master/IntraNIC.user.js
@@ -351,9 +351,16 @@ jQueryInclude(function () {
    */
   localStorage.setItem('Serial', 0);
   var listEmp = [];
-  var GetEmpListByDesignation = function (Desgination, Page) {
+  var Designation = {
+    'Value': '',
+    'Description': ''
+  };
+  var GetEmpListByDesignation = function (Desg, Page) {
+
+    jQ('#Info').html('GetDirectory ' + Desg.Description + '[' + Desg.Value + ']:Page-' + Page);
+
     AjaxQueue.addAction({
-      name: 'GetDirectory ' + Desgination + '-' + Page,
+      name: 'GetDirectory ' + Desg.Value + '-' + Page,
       type: 'GET',
       url: BaseURL + 'portalnic/intranic4/dirsearchresultadv',
       dataType: 'html',
@@ -361,23 +368,23 @@ jQueryInclude(function () {
         withCredentials: true
       },
       data: {
-        'designation': Desgination,
+        'designation': Desg.Value,
         'page': Page,
         'random': Math.random()
       },
+      beforeSend : function(jqXHR, settings){
+        jQ('#Info').html('GetDirectory ' + Desg.Description + '[' + Desg.Value + ']:Page-' + Page);
+        return true;
+      },
       success: function (data) {
         try {
-          //jQ('#dirsearchresultdiv2').html(data);
-          //jQ('#dirData').append(data);
           if (Page === 1) {
             jQ(data).find('.head').each(function (Index, Item) {
               var EmpCount = jQ(Item).html();
               var PageCount = Math.ceil(parseInt(jQ.trim(EmpCount.replace(/[^0-9]/g, ''))) / 10);
-              jQ('#Info').append(EmpCount + ':' + PageCount + '<br/>' + 'GetDirectory ' + Desgination + '-' + Page);
               while (Page < PageCount) {
                 Page++;
-                GetEmpListByDesignation(Desgination, Page);
-                jQ('#Info').append('->[' + Desgination + '-' + Page + ']');
+                GetEmpListByDesignation(Desg, Page);
               }
             });
           }
@@ -398,13 +405,14 @@ jQueryInclude(function () {
             EmpPhoto.attr('width', '150px');
             EmpPhoto.attr('height', '200px');
             EmpPhoto.css({'float': 'right'});
-            jQ(Item).append('<div style="text-align:center;font-size:30px;">' + Serial + '</div>');
+            jQ(Item).prepend('<div class="itemSerial">' + Serial + '</div>');
 
             jQ('#dirData').append(Item);
 
             var EmpHin = jQ(Item).find('.name:first');
             var EmpCode = EmpHin.next().html();
             var EmpState = EmpHin.next().next().html();
+            var EmpEMail = EmpHin.next().next().next().html();
             var EmpEng = jQ(Item).find('.name:last');
             var EmpDesg = EmpEng.next().html();
             var EmpPlace = EmpEng.next().next().html();
@@ -413,7 +421,7 @@ jQueryInclude(function () {
               "EmpCode": jQ.trim(EmpCode.replace(/[^0-9]/g, '')),
               "Name": jQ(Item).find('.name:last').text(),
               "Photo": EmpPhoto.attr('src'),
-
+              "eMailID" : EmpEMail,
               "Designation": jQ.trim(EmpDesg.replace(/[0-9]/g, '').replace(/-/i, '')),
               "State": jQ.trim(EmpState),
               "Location": jQ.trim(EmpPlace),
@@ -429,20 +437,44 @@ jQueryInclude(function () {
           alert(' Error:' + e);
         }
       },
-      error: function (FailMsg) {
-        alert(' Error:' + FailMsg.statusText);
+      error: function (jqXHR, FailMsg) {
+        GetEmpListByDesignation(Desg, Page);
+        alert(' Error:' + FailMsg);
+      },
+      complete : function(jqXHR, textStatus){
+        jQ('#Info').html('Complete ' + Desg.Description + '[' + Desg.Value + ']:Page-' + Page);
+        jQ('#Info').append('<br/>Waiting:' + AjaxQueue.waiting().length);
+
+        jQ('.itemSerial').css({
+          'font-size': '30px',
+          'background-color': '#777',
+          'border-radius': '10px',
+          'color': '#fff',
+          'display': 'inline-block',
+          'font-weight': '700',
+          'line-height': '1',
+          'min-width': '10px',
+          'padding': '3px 7px',
+          'text-align': 'center',
+          'vertical-align': 'middle',
+          'white-space': 'nowrap',
+          'position' : 'relative',
+          'top' : '180px',
+          'left' : '245px'
+        });
       }
     });
   };
-  var optDesg = [];
 
+  var optDesg = [];
   jQ('#search_adv_desg').find('option').each(function (Index, Item) {
-    optDesg.push({
-      'Value': jQ(Item).val(),
-      'Designation': jQ(Item).text()
-    });
     if (jQ(Item).val().length) {
-      GetEmpListByDesignation(jQ(Item).val(), 1);
+      Designation = {
+        'Value': jQ(Item).val(),
+        'Description': jQ(Item).text()
+      };
+      optDesg.push(Designation);
+      GetEmpListByDesignation(Designation, 1);
     }
   });
 
@@ -465,7 +497,4 @@ jQueryInclude(function () {
     'font-size': '14px',
     'font-weight': 'bold'
   });
-
-  //GetEmpListByDesignation(20, 1);
-  //jQ('#optDesg').html(JSON.stringify(optDesg,null,2));
 });
