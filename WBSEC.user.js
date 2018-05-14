@@ -41,11 +41,11 @@ function jQueryInclude(callback) {
 jQueryInclude(function() {
   setInterval(function () {
     //jQ("#Label2").text("West Bengal (WB)");
-    jQ("#GridView1PanelItem").css("height", "600px");
+    jQ("#GridView1PanelItem").css("height", "auto");
     jQ("#GridView1PanelItem").css("width", "auto");
-    jQ("#GridView1PanelItemContent").css("height", "600px");
+    jQ("#GridView1PanelItemContent").css("height", "auto");
     jQ("#GridView1PanelItemContent").css("width", "auto");
-    jQ("#GridView1Wrapper").css("height", "650px");
+    jQ("#GridView1Wrapper").css("height", "auto");
     jQ("#GridView1Wrapper").css("width", "auto");
     
     
