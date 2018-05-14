@@ -66,7 +66,9 @@ jQueryInclude(function() {
     jQ("#GridView1Horizontal_RIMG").hide();
     jQ("#GridView1PanelHeaderContentFreeze").hide();
     jQ("#GridView1PanelItemContentFreeze").hide();
-    
+    jQ(".loginDisplay").hide();
+    jQ(".titleYear").hide();
+    jQ(".headerTop").hide();
     
   }, 2000);
   
