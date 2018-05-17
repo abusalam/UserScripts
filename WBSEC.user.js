@@ -47,6 +47,7 @@ jQueryInclude(function() {
     jQ("#GridView1PanelItemContent").css("width", "auto");
     jQ("#GridView1Wrapper").css("height", "auto");
     jQ("#GridView1Wrapper").css("width", "auto");
+    //jQ(".GridCellDiv").css("width", "auto");
     
     
     jQ("#GridView1PanelHeader").css("width","auto");
@@ -55,6 +56,12 @@ jQueryInclude(function() {
     jQ("#GridView1PanelHeaderContent").css("width","auto");
     jQ(".main").css("width","auto");
     jQ(".page").css("width","auto");
+    
+    jQ(".GridviewScrollItem").css("background-color", "white");
+    jQ(".GridviewScrollItem:odd").css("background-color", "#f0f0f0");
+    jQ(".GridviewScrollItem:hover").css("background-color", "silver");
+    jQ(".GridviewScrollItem td").css("background-color", "transparent");
+    
     
     jQ("#GridView1VerticalRail").hide();
     jQ("#GridView1VerticalBar").hide();
@@ -69,6 +76,7 @@ jQueryInclude(function() {
     jQ(".loginDisplay").hide();
     jQ(".titleYear").hide();
     jQ(".headerTop").hide();
+    jQ("input[type='radio']").removeAttr("disabled");
     
   }, 2000);
   
@@ -76,12 +84,12 @@ jQueryInclude(function() {
     var d = new Date();
     jQ("#Label2").text("Time (" + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + ")");
     
-    if ((d.getSeconds() % 10) == 0) {
+    if ((d.getSeconds() % 40) == 0) {
   		jQ("#MainContent_btnSearch").click();
     }
     setTimeout(RefreshIT, 1000);
     return true;
   };
   
-  RefreshIT();
+  //RefreshIT();
 });
