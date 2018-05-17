@@ -2,7 +2,7 @@
 // @name          WBSEC-UI Update
 // @namespace     https://github.com/abusalam/WBSEC
 // @description   Helper Script For UI Correction in Firefox
-// @include       http://www.wbsec.org/*
+// @include       http://wbsec.org/*
 // @grant         none
 // @downloadURL   https://github.com/abusalam/WBSEC/raw/master/WBSEC.user.js
 // @updateURL     https://github.com/abusalam/WBSEC/raw/master/WBSEC.user.js
@@ -87,9 +87,9 @@ jQueryInclude(function() {
     if ((d.getSeconds() % 40) == 0) {
   		jQ("#MainContent_btnSearch").click();
     }
-    setTimeout(RefreshIT, 1000);
+    setTimeout(RefreshIT, 15000);
     return true;
   };
   
-  //RefreshIT();
+  RefreshIT();
 });
