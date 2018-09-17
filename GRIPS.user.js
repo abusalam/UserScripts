@@ -3,7 +3,7 @@
 // @namespace   https://github.com/abusalam
 // @description Auto Submission and Generation of Challan for HRA
 // @include     https://wbifms.gov.in/GRIPS/*
-// @version     1.2.1
+// @version     1.2.2
 // @grant       none
 // @downloadURL https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
 // @updateURL   https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
@@ -120,9 +120,9 @@ jQueryInclude(function () {
       jQ('#grn_no_reprint1').val(savedGRN.substr(2, 6));
       jQ('#grn_no_reprint2').val(savedGRN.substr(8, 9));
       jQ('#grn_no_reprint3').val(savedGRN.substr(17, 1));
-    } else if (jQ('#grn_no_reprint').length) {
-      localStorage.setItem('GRN', jQ('#grn_no_reprint').val());
-      jQ('#GRN').text('Govt. Reference No.(GRN#): ' + jQ('#grn_no_reprint').val());
+    } else if (jQ('#finalGrnInRequest').length) {
+      localStorage.setItem('GRN', jQ('#finalGrnInRequest').val());
+      jQ('#GRN').text('Govt. Reference No.(GRN#): ' + jQ('#finalGrnInRequest').val());
     }
   }, 2000);
 });
