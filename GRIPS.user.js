@@ -3,7 +3,7 @@
 // @namespace   https://github.com/abusalam
 // @description Auto Submission and Generation of Challan for HRA
 // @include     https://wbifms.gov.in/GRIPS/*
-// @version     1.2.2
+// @version     1.2.4
 // @grant       none
 // @downloadURL https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
 // @updateURL   https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
@@ -69,8 +69,8 @@ jQueryInclude(function () {
 
   jQ('body').before(jQ('<div id="GRN"></div>').css({
       'position': 'absolute',
-      'top': 10,
-      'left': 10,
+      'top': 50,
+      'left': 160,
       'font-size': '24px',
       'color': 'OLIVE'
     }).text(function () {
