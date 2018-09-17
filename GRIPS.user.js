@@ -100,6 +100,7 @@ jQueryInclude(function () {
   jQ('#mode').val('1'); // Payment Mode: [1] Online Payment
   jQ('#param2').val(HRA.RefNo);
   jQ('#dept_nm1').val('043').trigger('change'); // Select Department/Directorate: [043] Housing
+  jQ('#confirmAmnt').val(HRA.Amount);
 
   setInterval(function () {
     if (jQ('#m_pay1').val() !== 'Housing Rents') {
