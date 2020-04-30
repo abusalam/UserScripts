@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.1
+// @version      0.0.42
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
 // @grant        none
-// @downloadURL https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
-// @updateURL   https://github.com/abusalam/UserScripts/raw/master/GRIPS.user.js
+// @downloadURL https://github.com/abusalam/UserScripts/raw/master/COVID-19-WhatsApp-WebBot.user.js
+// @updateURL   https://github.com/abusalam/UserScripts/raw/master/COVID-19-WhatsApp-WebBot.user.js
 // @icon        http://www.gravatar.com/avatar/43f0ea57b814fbdcb3793ca3e76971cf
 // ==/UserScript==
 
@@ -19,6 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
+            + 'var Version = "v0.0.42";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -29,41 +30,153 @@ function jQueryInclude(callback) {
 
 jQueryInclude(function () {
     jQ(".xZ93f").text("Welcome to TeleMedinicine Helpline, Malda");
-    setInterval(function(){
-        if(!jQ("#covid-tag").length) {
-            jQ("._5SiUq").after('<span id="covid-tag">COVID-19 Helpline Malda</span>');
-        }
-    },2000);
 
-    setTimeout(function(){
+    setTimeout(function () {
+
+        setInterval(function () {
+            if(!jQ("#covid-tag").length) {
+                if(jQ("._5SiUq").length) {
+                    jQ("._5SiUq").after('<span id="covid-tag">COVID-19 Helpline Malda ' + Version + '</span>');
+                } else {
+                    jQ(".P8cO8").before('<div style="padding-top:20px" id="covid-tag">COVID-19 Helpline Malda ' + Version + '</div>');
+                }
+            }
+        },2000);
+
         window.WappBot = {
             configWappBot: {
                 useApi: false,
                 uriApi: "https://wapp-bot.herokuapp.com/message",
                 ignoreChat: [],
                 messageInitial: {
-                    text: "Hello I'm WappBot send a reply \n",
+                    text: "Welcome to Malda Telemedicine Helpline \n Do you have fever? \n"
+                    + "1. Yes\n2. No\n",
                     image: null
                 },
-                messageIncorrect: "Incorrect option entered, we remind you that the options are: \n",
-                messageOption: {
-                    "@Date": {
-                        text: new Date().toLocaleDateString(),
-                        image: null
-                    },
-                    "@Christmas": {
-                        text: (() => {
-                            let myDate = new Date();
-                            let cmas = Date.parse("Dec 25, " + myDate.getFullYear());
-                            let today = Date.parse(myDate);
+                messageIncorrect: "Incorrect option, please reply with: \n",
 
-                            let daysToChristmas = Math.round((cmas - today) / (1000 * 60 * 60 * 24));
-                            if (daysToChristmas == 0) return "Today is Christmas ... Merry Christmas!";
-                            if (daysToChristmas < 0) return "Christmas was " + -1 * daysToChristmas + " days ago.";
-                            if (daysToChristmas > 0) return "There are " + daysToChristmas + " days to Christmas!";
-                        })(),
-                        image: null
+                messageOption: (sendOption, msgId, newMessage) => {
+                    let qryFever = {
+                        ask : "Do you have fever?\n"
+                        + "1. Yes\n2. No\n",
+                        options : {
+                            "1": "qryFeverDays",
+                            "2" : "qryCough",
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFever", JSON.stringify(qryFever));
+
+                    let qryFeverDays = {
+                        ask : "Since how many days?\n",
+                        options : {
+                            "FeverDays" : "qryFeverMeasure"
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFeverDays", JSON.stringify(qryFeverDays));
+
+                    let qryFeverMeasure = {
+                        ask : "Measured it with thermometer?\n"
+                        + "1. Yes\n2. No\n",
+                        options : {
+                            "1" : "qryFeverTemp",
+                            "2" : "qryCough"
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFeverMeasure", JSON.stringify(qryFeverMeasure));
+
+                    let qryFeverTemp = {
+                        ask : "How much?\n",
+                        options : {
+                            "FeverTemp" : "qryCough"
+                        },
                     }
+                    sessionStorage.setItem("covidQuery_"+"qryFeverTemp", JSON.stringify(qryFeverTemp));
+
+                    let qryCough = {
+                        ask : "Do you have dry cough?\n"
+                        + "1. Yes\n2. No\n",
+                        options : {
+                            "1": "qryUnfit",
+                            "2" : "qryUnfit",
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryCough", JSON.stringify(qryCough));
+
+                    let qryUnfit = {
+                        ask : "Do you have any of the following?\n"
+                        + "1. Diabetes \n2. Hypertension \n3. Lung disease \n4. Heart disease",
+                        options : {
+                            "1" : "qryTravel",
+                            "2" : "qryTravel",
+                            "3" : "qryTravel",
+                            "4" : "qryTravel",
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryUnfit", JSON.stringify(qryUnfit));
+
+                    let qryTravel = {
+                        ask : "Have you visited another state in last 14 days?\n"
+                        + "1. Yes\n2. No\n",
+                        options : {
+                            "1": "qryFinished",
+                            "2" : "qryFinished",
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryTravel", JSON.stringify(qryTravel));
+
+                    let qryFinished = {
+                        ask : "We shall call you shortly...\n",
+                        options : {
+                            "Finished": "qryFinished",
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFinished", JSON.stringify(qryFinished));
+                    // End of COVID-19 Questions
+
+
+
+
+
+
+
+
+                    let currQryKey = sessionStorage.getItem(msgId+"currQryKey");
+
+                    if (currQryKey == null) {
+                        currQryKey = "qryFever";
+                        if (!sendOption) sessionStorage.setItem(msgId+"currQryKey", "qryFever");
+                        console.log("currQryKey set = " + sessionStorage.getItem(msgId+"currQryKey"));
+                    } else {
+                        console.log("currQryKey get = " + currQryKey);
+                    }
+
+                    let storageQryKey = "covidQuery_" + currQryKey;
+
+                    console.log("storageQryKey = " + storageQryKey);
+
+                    console.log("126-storage-get:" + sessionStorage.getItem(storageQryKey));
+
+                    let currQry = JSON.parse(sessionStorage.getItem("covidQuery_" + currQryKey));
+
+                    console.log({"127-msgID" : msgId, "currQry" : currQry});
+
+
+                    if (sendOption) { //Prepare Options to be asked
+                        currOptions = currQry.options;
+                    } else { //Prepare Question to be asked
+                        console.log("Asking:" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask);
+                        currOptions = {
+                            text : JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask,
+                            image: null
+                        };
+                        console.log({"131-currQry-new-option" : currQry.options[newMessage]});
+                        let nextQryKey = currQry.options[newMessage];
+                        if(nextQryKey !== undefined) sessionStorage.setItem(msgId+"currQryKey", nextQryKey);
+                    }
+
+                    console.log("Got " + currQryKey + "=>" + sessionStorage.getItem(msgId+"currQryKey") + " sendOption: (" + sendOption + "), msgId: (" + msgId + '), newMessage: (' + newMessage + ')' );
+
+                    return currOptions;
                 }
             }
         };
@@ -71,13 +184,13 @@ jQueryInclude(function () {
 
         /* eslint-disable */
         /**
- * This script contains WAPI functions that need to be run in the context of the webpage
- */
+         * This script contains WAPI functions that need to be run in the context of the webpage
+         */
 
         /**
- * Auto discovery the webpack object references of instances that contains all functions used by the WAPI
- * functions and creates the Store object.
- */
+         * Auto discovery the webpack object references of instances that contains all functions used by the WAPI
+         * functions and creates the Store object.
+         */
         if (!window["webpackJsonp"]) {
             window.webpackJsonp = webpackJsonp;
         }
@@ -175,11 +288,11 @@ jQueryInclude(function () {
         };
 
         /**
- * Serializes a chat object
- *
- * @param rawChat Chat object
- * @returns {{}}
- */
+         * Serializes a chat object
+         *
+         * @param rawChat Chat object
+         * @returns {{}}
+         */
 
         window.WAPI._serializeChatObj = obj => {
             if (obj == undefined) {
@@ -275,11 +388,11 @@ jQueryInclude(function () {
         };
 
         /**
- * Fetches chat object from store by ID
- *
- * @param id ID of chat
- * @returns {T|*} Chat object
- */
+         * Fetches chat object from store by ID
+         *
+         * @param id ID of chat
+         * @returns {T|*} Chat object
+         */
         window.WAPI.getChat = function(id) {
             id = typeof id == "string" ? id : id._serialized;
             const found = window.Store.Chat.get(id);
@@ -292,10 +405,10 @@ jQueryInclude(function () {
         };
 
         /**
- * Fetches all chat IDs from store
- *
- * @returns {Array|*} List of chat id's
- */
+         * Fetches all chat IDs from store
+         *
+         * @returns {Array|*} List of chat id's
+         */
         window.WAPI.getAllChatIds = function() {
             const chatIds = window.Store.Chat.map(chat => chat.id._serialized || chat.id);
             return chatIds;
@@ -418,11 +531,16 @@ jQueryInclude(function () {
             });
         };
 
-        window.WappBot.messageIncludeKey = (message, options) => {
+        window.WappBot.messageIncludeKey = (message, options, chatId) => {
+            console.log({"msgIncludeKey": options});
+            if (options.length == 1) {
+                return window.WappBot.configWappBot.messageOption(false, chatId, options[0]);
+            }
             for (let i = 0; i < options.length; i++) {
                 if (message.toUpperCase().includes(options[i].toUpperCase()))
-                    return window.WappBot.configWappBot.messageOption[options[i]];
+                    return window.WappBot.configWappBot.messageOption(false, chatId, message);
             }
+            console.log("Incorrect Option");
             return false;
         };
 
@@ -430,31 +548,32 @@ jQueryInclude(function () {
             let message = "";
             if (window.WappBot.configWappBot.ignoreChat.indexOf(chatId) > -1) {
                 message = `${window.WappBot.configWappBot.messageIncorrect}`;
+                for (let i = 0; i < options.length; i++) message += `\t ${options[i]} \n`;
             } else {
                 message = `${window.WappBot.configWappBot.messageInitial.text}`;
                 window.WappBot.configWappBot.ignoreChat.push(chatId);
             }
-            for (let i = 0; i < options.length; i++) message += `\t ${options[i]} \n`;
+            //for (let i = 0; i < options.length; i++) message += `\t ${options[i]} \n`;
 
             return message;
         };
 
         window.WappBot.sendByLocalSetting = (newMessage, chatId) => {
-            const options = Object.keys(window.WappBot.configWappBot.messageOption);
-            const messageIncludeKey = window.WappBot.messageIncludeKey(newMessage, options);
-            if (!messageIncludeKey) {
+            const options = Object.keys(window.WappBot.configWappBot.messageOption(true, chatId, newMessage));
+            const messageIncludeKey = window.WappBot.messageIncludeKey(newMessage, options, chatId);
+            if (!messageIncludeKey) { // If incorrect option or just started chatting
                 const message = window.WappBot.prepareMessageToSend(chatId, options);
                 if (!window.WappBot.configWappBot.messageInitial.image) window.WAPI.sendMessage(chatId, message);
                 else window.WAPI.sendImage(window.WappBot.configWappBot.messageInitial.image, chatId, "image", message);
-            } else {
+            } else { // Send proper reply of chosen option
                 if (!messageIncludeKey.image) window.WAPI.sendMessage(chatId, messageIncludeKey.text);
                 else window.WAPI.sendImage(messageIncludeKey.image, chatId, "image", messageIncludeKey.text);
             }
         };
 
         /**
- * New messages observable functions.
- */
+         * New messages observable functions.
+         */
         window.WAPI._newMessagesQueue = [];
         window.WAPI._newMessagesBuffer =
             sessionStorage.getItem("saved_msgs") != null ? JSON.parse(sessionStorage.getItem("saved_msgs")) : [];
@@ -493,7 +612,8 @@ jQueryInclude(function () {
         window.addEventListener("unload", window.WAPI._unloadInform, false);
         window.addEventListener("beforeunload", window.WAPI._unloadInform, false);
         window.addEventListener("pageunload", window.WAPI._unloadInform, false);
-        console.log("Application Loaded");
+        console.log("Application Ready");
+        //console.log(window.WappBot.configWappBot.messageOption(true, "", "hi"));
     }, 10000);
 
 });
