@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.42
+// @version      0.0.45
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.42";'
+            + 'var Version = "v0.0.45";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -49,16 +49,16 @@ jQueryInclude(function () {
                 uriApi: "https://wapp-bot.herokuapp.com/message",
                 ignoreChat: [],
                 messageInitial: {
-                    text: "Welcome to Malda Telemedicine Helpline \n Do you have fever? \n"
-                    + "1. Yes\n2. No\n",
+                    text: "Welcome to Malda Telemedicine Helpline \nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম\n Do you have fever? \nআপনার জ্বর আছে?\n"
+                    + "1. Yes/হ্যাঁ\n2. No/না\n",
                     image: null
                 },
-                messageIncorrect: "Incorrect option, please reply with: \n",
+                messageIncorrect: "Incorrect option, please reply with: \nভুল বিকল্প, দয়া করে এর সাথে উত্তর দিন:\n",
 
                 messageOption: (sendOption, msgId, newMessage) => {
                     let qryFever = {
-                        ask : "Do you have fever?\n"
-                        + "1. Yes\n2. No\n",
+                        ask : "Do you have fever?\nআপনার জ্বর আছে?\n"
+                        + "1. Yes/হ্যাঁ\n2. No/না\n",
                         options : {
                             "1": "qryFeverDays",
                             "2" : "qryCough",
@@ -67,7 +67,7 @@ jQueryInclude(function () {
                     sessionStorage.setItem("covidQuery_"+"qryFever", JSON.stringify(qryFever));
 
                     let qryFeverDays = {
-                        ask : "Since how many days?\n",
+                        ask : "Since how many days?\nকত দিন থেকে?\n",
                         options : {
                             "FeverDays" : "qryFeverMeasure"
                         },
@@ -75,8 +75,8 @@ jQueryInclude(function () {
                     sessionStorage.setItem("covidQuery_"+"qryFeverDays", JSON.stringify(qryFeverDays));
 
                     let qryFeverMeasure = {
-                        ask : "Measured it with thermometer?\n"
-                        + "1. Yes\n2. No\n",
+                        ask : "Measured it with thermometer?\nথার্মোমিটার দিয়ে পরিমাপ করা হয়েছে?\n"
+                        + "1. Yes/হ্যাঁ\n2. No/না\n",
                         options : {
                             "1" : "qryFeverTemp",
                             "2" : "qryCough"
@@ -85,7 +85,7 @@ jQueryInclude(function () {
                     sessionStorage.setItem("covidQuery_"+"qryFeverMeasure", JSON.stringify(qryFeverMeasure));
 
                     let qryFeverTemp = {
-                        ask : "How much?\n",
+                        ask : "How much?\nকত?\n",
                         options : {
                             "FeverTemp" : "qryCough"
                         },
@@ -93,8 +93,8 @@ jQueryInclude(function () {
                     sessionStorage.setItem("covidQuery_"+"qryFeverTemp", JSON.stringify(qryFeverTemp));
 
                     let qryCough = {
-                        ask : "Do you have dry cough?\n"
-                        + "1. Yes\n2. No\n",
+                        ask : "Do you have dry cough?\nআপনার কি শুকনো কাশি আছে?\n"
+                        + "1. Yes/হ্যাঁ\n2. No/না\n",
                         options : {
                             "1": "qryUnfit",
                             "2" : "qryUnfit",
@@ -103,20 +103,21 @@ jQueryInclude(function () {
                     sessionStorage.setItem("covidQuery_"+"qryCough", JSON.stringify(qryCough));
 
                     let qryUnfit = {
-                        ask : "Do you have any of the following?\n"
-                        + "1. Diabetes \n2. Hypertension \n3. Lung disease \n4. Heart disease",
+                        ask : "Do you have any of the following?\nআপনার কি নিম্নলিখিত কোনও রোগ আছে?\n"
+                        + "1. Diabetes \n2. Hypertension \n3. Lung disease \n4. Heart disease\n5. None of the above/উপরের কিছুই না",
                         options : {
                             "1" : "qryTravel",
                             "2" : "qryTravel",
                             "3" : "qryTravel",
                             "4" : "qryTravel",
+                            "5" : "qryTravel",
                         },
                     };
                     sessionStorage.setItem("covidQuery_"+"qryUnfit", JSON.stringify(qryUnfit));
 
                     let qryTravel = {
-                        ask : "Have you visited another state in last 14 days?\n"
-                        + "1. Yes\n2. No\n",
+                        ask : "Have you visited another state in last 14 days?\nআপনি কি গত 14 দিনে অন্য কোনও রাজ্যে গিয়েছেন?\n"
+                        + "1. Yes/হ্যাঁ\n2. No/না\n",
                         options : {
                             "1": "qryFinished",
                             "2" : "qryFinished",
@@ -125,7 +126,7 @@ jQueryInclude(function () {
                     sessionStorage.setItem("covidQuery_"+"qryTravel", JSON.stringify(qryTravel));
 
                     let qryFinished = {
-                        ask : "We shall call you shortly...\n",
+                        ask : "We shall call you shortly...\nআমরা শীঘ্রই আপনাকে কল করব...",
                         options : {
                             "Finished": "qryFinished",
                         },
