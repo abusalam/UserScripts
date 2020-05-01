@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.45
+// @version      0.0.57
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.45";'
+            + 'var Version = "v0.0.57";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -49,103 +49,786 @@ jQueryInclude(function () {
                 uriApi: "https://wapp-bot.herokuapp.com/message",
                 ignoreChat: [],
                 messageInitial: {
-                    text: "Welcome to Malda Telemedicine Helpline \nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম\n Do you have fever? \nআপনার জ্বর আছে?\n"
-                    + "1. Yes/হ্যাঁ\n2. No/না\n",
-                    image: null
+                    text: "Welcome to Malda Telemedicine Helpline [ Version: " + Version + " ] \nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম\n"
+                    + "Please reply with 1 or 2 to continue...\nদয়া করে 1 বা 2 দিয়ে উত্তর দিন\n"
+                    + "1 ➙ English\n2 ➙ বাংলা\n",
+                    image: null //"https://pmrpressrelease.com/wp-content/uploads/2019/05/Telehealth-1.jpg"
                 },
                 messageIncorrect: "Incorrect option, please reply with: \nভুল বিকল্প, দয়া করে এর সাথে উত্তর দিন:\n",
 
                 messageOption: (sendOption, msgId, newMessage) => {
+
+                    let qryApp = {
+                        ask : "Please Select Questionaire?\n"
+                        + "1. Arogya Setu Questionaire\n2. Malda TeleMedicine Questionaire\n",
+                        options : {
+                            "1" : "qryName",
+                            "2" : "qryNameBn",
+                        },
+                        scores : {
+                            "1" : 0,
+                            "2" : 0,
+                        },
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryApp", JSON.stringify(qryApp));
+
+                    let qryLang = {
+                        ask : "Please Select language\nভাষা নির্বাচন করুন\n"
+                        + "1. English\n2. বাংলা\n",
+                        options : {
+                            "1" : "qryName",
+                            "2" : "qryNameBn",
+                        },
+                        scores : {
+                            "1" : 0,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryLang", JSON.stringify(qryLang));
+
+                    let qryName = {
+                        ask : "What is your Name?\n",
+                        options : {
+                            "Name" : "qryAge"
+                        },
+                        scores : {
+                            "Name" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryName", JSON.stringify(qryName));
+
+                    let qryNameBn = {
+                        ask : "আপনার নাম কি?\n",
+                        options : {
+                            "Name" : "qryAgeBn"
+                        },
+                        scores : {
+                            "Name" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryNameBn", JSON.stringify(qryNameBn));
+
+                    let qryAge = {
+                        ask : "What is your Age?\n"
+                        + "1 ➙ Less than 40\n"
+                        + "2 ➙ 40 - 50\n"
+                        + "3 ➙ 50 - 60\n"
+                        + "4 ➙ More than 60",
+                        options : {
+                            "1" : "qryFever",
+                            "2" : "qryFever",
+                            "3" : "qryFever",
+                            "4" : "qryFever",
+                        },
+                        scores : {
+                            "1" : 0,
+                            "2" : 1,
+                            "3" : 2,
+                            "4" : 3,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryAge", JSON.stringify(qryAge));
+
+                    let qryAgeBn = {
+                        ask : "আপনার বয়স কত?\n"
+                        + "1 ➙ ৪০ থেকে কম\n"
+                        + "2 ➙ 40 থেকে 50\n"
+                        + "3 ➙ 50 থেকে 60\n"
+                        + "4 ➙ 60 থেকে বেশি",
+                        options : {
+                            "1" : "qryFeverBn",
+                            "2" : "qryFeverBn",
+                            "3" : "qryFeverBn",
+                            "4" : "qryFeverBn",
+                        },
+                        scores : {
+                            "1" : 0,
+                            "2" : 1,
+                            "3" : 2,
+                            "4" : 3,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryAgeBn", JSON.stringify(qryAgeBn));
+
                     let qryFever = {
-                        ask : "Do you have fever?\nআপনার জ্বর আছে?\n"
-                        + "1. Yes/হ্যাঁ\n2. No/না\n",
+                        ask : "Do you have fever?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
                         options : {
                             "1": "qryFeverDays",
                             "2" : "qryCough",
                         },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
                     };
                     sessionStorage.setItem("covidQuery_"+"qryFever", JSON.stringify(qryFever));
 
-                    let qryFeverDays = {
-                        ask : "Since how many days?\nকত দিন থেকে?\n",
+                    let qryFeverBn = {
+                        ask : "আপনার জ্বর আছে?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
                         options : {
-                            "FeverDays" : "qryFeverMeasure"
+                            "1" : "qryFeverDaysBn",
+                            "2" : "qryCoughBn",
                         },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFeverBn", JSON.stringify(qryFeverBn));
+
+                    let qryFeverDays = {
+                        ask : "How long is the fever persisting?\n"
+                        + "1 ➙ Less than 3 days\n"
+                        + "2 ➙ More than 3 days",
+                        options : {
+                            "1" : "qryFeverMeasure",
+                            "2" : "qryFeverMeasure",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 2,
+                        }
                     };
                     sessionStorage.setItem("covidQuery_"+"qryFeverDays", JSON.stringify(qryFeverDays));
 
+                    let qryFeverDaysBn = {
+                        ask : "জ্বর কত দিন রয়েছে?\n"
+                        + "1 ➙ ৩ দিনের থেকে কম\n"
+                        + "2 ➙ ৩ দিনের থেকে বেশি",
+                        options : {
+                            "1" : "qryFeverMeasureBn",
+                            "2" : "qryFeverMeasureBn",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 2,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFeverDaysBn", JSON.stringify(qryFeverDaysBn));
+
                     let qryFeverMeasure = {
-                        ask : "Measured it with thermometer?\nথার্মোমিটার দিয়ে পরিমাপ করা হয়েছে?\n"
-                        + "1. Yes/হ্যাঁ\n2. No/না\n",
+                        ask : "Measured it with thermometer?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
                         options : {
                             "1" : "qryFeverTemp",
                             "2" : "qryCough"
                         },
+                        scores : {
+                            "1" : 0,
+                            "2" : 0,
+                        }
                     };
                     sessionStorage.setItem("covidQuery_"+"qryFeverMeasure", JSON.stringify(qryFeverMeasure));
 
-                    let qryFeverTemp = {
-                        ask : "How much?\nকত?\n",
+                    let qryFeverMeasureBn = {
+                        ask : "থার্মোমিটার দিয়ে পরিমাপ করা হয়েছে?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
                         options : {
-                            "FeverTemp" : "qryCough"
+                            "1" : "qryFeverTempBn",
+                            "2" : "qryCoughBn"
                         },
+                        scores : {
+                            "1" : 0,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFeverMeasureBn", JSON.stringify(qryFeverMeasureBn));
+
+                    let qryFeverTemp = {
+                        ask : "What was the maximum temperature?\n"
+                        + "1 ➙ Less than 99.5°F\n"
+                        + "2 ➙ More than 99.5°F",
+                        options : {
+                            "1" : "qryCough",
+                            "2" : "qryCough"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 2,
+                        }
                     }
                     sessionStorage.setItem("covidQuery_"+"qryFeverTemp", JSON.stringify(qryFeverTemp));
 
-                    let qryCough = {
-                        ask : "Do you have dry cough?\nআপনার কি শুকনো কাশি আছে?\n"
-                        + "1. Yes/হ্যাঁ\n2. No/না\n",
+                    let qryFeverTempBn = {
+                        ask : "সর্বোচ্চ তাপমাত্রা কত ছিল?\n"
+                        + "1 ➙ ৯৯.৫°F থেকে কম\n"
+                        + "2 ➙ ৯৯.৫°F থেকে বেশি",
                         options : {
-                            "1": "qryUnfit",
-                            "2" : "qryUnfit",
+                            "1" : "qryCoughBn",
+                            "2" : "qryCoughBn"
                         },
+                        scores : {
+                            "1" : 1,
+                            "2" : 2,
+                        }
+                    }
+                    sessionStorage.setItem("covidQuery_"+"qryFeverTempBn", JSON.stringify(qryFeverTempBn));
+
+                    let qryCough = {
+                        ask : "Do you have dry cough?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryCoughSince",
+                            "2" : "qryThroat",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
                     };
                     sessionStorage.setItem("covidQuery_"+"qryCough", JSON.stringify(qryCough));
 
-                    let qryUnfit = {
-                        ask : "Do you have any of the following?\nআপনার কি নিম্নলিখিত কোনও রোগ আছে?\n"
-                        + "1. Diabetes \n2. Hypertension \n3. Lung disease \n4. Heart disease\n5. None of the above/উপরের কিছুই না",
+                    let qryCoughBn = {
+                        ask : "আপনার কি শুকনো কাশি আছে?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
                         options : {
-                            "1" : "qryTravel",
-                            "2" : "qryTravel",
-                            "3" : "qryTravel",
-                            "4" : "qryTravel",
-                            "5" : "qryTravel",
+                            "1" : "qryCoughSinceBn",
+                            "2" : "qryThroatBn",
                         },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
                     };
-                    sessionStorage.setItem("covidQuery_"+"qryUnfit", JSON.stringify(qryUnfit));
+                    sessionStorage.setItem("covidQuery_"+"qryCoughBn", JSON.stringify(qryCoughBn));
 
-                    let qryTravel = {
-                        ask : "Have you visited another state in last 14 days?\nআপনি কি গত 14 দিনে অন্য কোনও রাজ্যে গিয়েছেন?\n"
-                        + "1. Yes/হ্যাঁ\n2. No/না\n",
+                    let qryCoughSince = {
+                        ask : "How long you have dry cough?\n"
+                        + "1 ➙ More than 2 weeks\n"
+                        + "2 ➙ Less than 2 weeks",
                         options : {
-                            "1": "qryFinished",
+                            "1" : "qryThroat",
+                            "2" : "qryThroat",
+                        },
+                        scores : {
+                            "1" : 0,
+                            "2" : 1,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryCoughSince", JSON.stringify(qryCoughSince));
+
+                    let qryCoughSinceBn = {
+                        ask : "আপনার কত দিন থেকে শুকনো কাশি আছে?\n"
+                        + "1 ➙ ২ সপ্তাহের বেশি\n"
+                        + "2 ➙ ২ সপ্তাহের কম",
+                        options : {
+                            "1" : "qryThroatBn",
+                            "2" : "qryThroatBn",
+                        },
+                        scores : {
+                            "1" : 0,
+                            "2" : 1,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryCoughSinceBn", JSON.stringify(qryCoughSinceBn));
+
+                    let qryThroat = {
+                        ask : "Do you have sore throat?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryBreath",
+                            "2" : "qryBreath",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryThroat", JSON.stringify(qryThroat));
+
+                    let qryThroatBn = {
+                        ask : "আপনার কি গলা ব্যাথা আছে?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryBreathBn",
+                            "2" : "qryBreathBn",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryThroatBn", JSON.stringify(qryThroatBn));
+
+                    let qryBreath = {
+                        ask : "Are you suffering from shortness of breath?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryDiarrhea",
+                            "2" : "qryDiarrhea",
+                        },
+                        scores : {
+                            "1" : 5,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryBreath", JSON.stringify(qryBreath));
+
+                    let qryBreathBn = {
+                        ask : "আপনার কি শ্বাসকষ্ট আছে?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryDiarrheaBn",
+                            "2" : "qryDiarrheaBn"
+                        },
+                        scores : {
+                            "1" : 5,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryBreathBn", JSON.stringify(qryBreathBn));
+
+                    let qryDiarrhea = {
+                        ask : "Do you have diarrhea?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryAbdomainPain",
+                            "2" : "qryAbdomainPain",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryDiarrhea", JSON.stringify(qryDiarrhea));
+
+                    let qryDiarrheaBn = {
+                        ask : "আপনার কি পাতলা পায়খানা আছে?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryAbdomainPainBn",
+                            "2" : "qryAbdomainPainBn"
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryDiarrheaBn", JSON.stringify(qryDiarrheaBn));
+
+                    let qryAbdomainPain = {
+                        ask : "Do you have abdominal pain?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryDiabetes",
+                            "2" : "qryDiabetes",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryAbdomainPain", JSON.stringify(qryAbdomainPain));
+
+                    let qryAbdomainPainBn = {
+                        ask : "আপনার কি পেট ব্যথা আছে?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryDiabetesBn",
+                            "2" : "qryDiabetesBn"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryAbdomainPainBn", JSON.stringify(qryAbdomainPainBn));
+
+                    let qryDiabetes = {
+                        ask : "Are you suffering from diabetes?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryHypertension",
+                            "2" : "qryHypertension",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryDiabetes", JSON.stringify(qryDiabetes));
+
+                    let qryDiabetesBn = {
+                        ask : "আপনি কি ডায়াবেটিস রোগে ভুগছেন?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryHypertensionBn",
+                            "2" : "qryHypertensionBn"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryDiabetesBn", JSON.stringify(qryDiabetesBn));
+
+                    let qryHypertension = {
+                        ask : "Are you suffering from Hypertension?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryLung",
+                            "2" : "qryLung",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryHypertension", JSON.stringify(qryHypertension));
+
+                    let qryHypertensionBn = {
+                        ask : "আপনি কি উচ্চ রক্তচাপ রোগে ভুগছেন?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryLungBn",
+                            "2" : "qryLungBn"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryHypertensionBn", JSON.stringify(qryHypertensionBn));
+
+                    let qryLung = {
+                        ask : "Are you suffering from Lung disease?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryHeart",
+                            "2" : "qryHeart",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryLung", JSON.stringify(qryLung));
+
+                    let qryLungBn = {
+                        ask : "আপনি কি ফুসফুসের রোগে ভুগছেন?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryHeartBn",
+                            "2" : "qryHeartBn"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryLungBn", JSON.stringify(qryLungBn));
+
+                    let qryHeart = {
+                        ask : "Are you suffering from Heart disease?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryImmunity",
+                            "2" : "qryImmunity",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryHeart", JSON.stringify(qryHeart));
+
+                    let qryHeartBn = {
+                        ask : "আপনি কি হৃদরোগে ভুগছেন?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryImmunityBn",
+                            "2" : "qryImmunityBn"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryHeartBn", JSON.stringify(qryHeartBn));
+
+                    let qryImmunity = {
+                        ask : "Are you suffering from Immunity disorder?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qrySteroid",
+                            "2" : "qrySteroid",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryImmunity", JSON.stringify(qryImmunity));
+
+                    let qryImmunityBn = {
+                        ask : "আপনি কি রোগ প্রতিরোধ ক্ষমতা কমের ব্যাধিতে ভুগছেন?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qrySteroidBn",
+                            "2" : "qrySteroidBn"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryImmunityBn", JSON.stringify(qryImmunityBn));
+
+                    let qrySteroid = {
+                        ask : "Are you taking Steroids regularly as treatment?\n"
+                        + "1 ➙ Yes\n"
+                        + "2 ➙ No",
+                        options : {
+                            "1" : "qryTravelState",
+                            "2" : "qryTravelState",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qrySteroid", JSON.stringify(qrySteroid));
+
+                    let qrySteroidBn = {
+                        ask : "আপনি কি চিকিৎসা হিসাবে নিয়মিত স্টেরয়েড গ্রহণ করেন?\n"
+                        + "1 ➙ হ্যাঁ\n"
+                        + "2 ➙ না",
+                        options : {
+                            "1" : "qryTravelStateBn",
+                            "2" : "qryTravelStateBn"
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qrySteroidBn", JSON.stringify(qrySteroidBn));
+
+                    let qryTravelState = {
+                        ask : "Have you visited another state in last 14 days?\n"
+                        + "1 ➙ Yes\n2 ➙ No\n",
+                        options : {
+                            "1" : "qryTravelDistrict",
+                            "2" : "qryTravelDistrict",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryTravelState", JSON.stringify(qryTravelState));
+
+                    let qryTravelStateBn = {
+                        ask : "আপনি কি গত ১৪ দিনে অন্য কোনও রাজ্যে গিয়েছেন?\n"
+                        + "1 ➙ হ্যাঁ\n2 ➙ না\n",
+                        options : {
+                            "1" : "qryTravelDistrictBn",
+                            "2" : "qryTravelDistrictBn",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryTravelStateBn", JSON.stringify(qryTravelStateBn));
+
+                    let qryTravelDistrict = {
+                        ask : "Have you visited any other district of WB in last 14 days?\n"
+                        + "1 ➙ Yes\n2 ➙ No\n",
+                        options : {
+                            "1" : "qryTravelHotSpot",
+                            "2" : "qryTravelHotSpot",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryTravelDistrict", JSON.stringify(qryTravelDistrict));
+
+                    let qryTravelDistrictBn = {
+                        ask : "আপনি কি গত ১৪ দিনের মধ্যে পশ্চিমবঙ্গের অন্য কোনও জেলায় গিয়েছেন?\n"
+                        + "1 ➙ হ্যাঁ\n2 ➙ না\n",
+                        options : {
+                            "1" : "qryTravelHotSpotBn",
+                            "2" : "qryTravelHotSpotBn",
+                        },
+                        scores : {
+                            "1" : 1,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryTravelDistrictBn", JSON.stringify(qryTravelDistrictBn));
+
+                    let qryTravelHotSpot = {
+                        ask : "Have you visited any Hot spot in last 14 days?\n"
+                        + "1 ➙ Yes\n2 ➙ No\n",
+                        options : {
+                            "1" : "qryContact",
+                            "2" : "qryContact",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryTravelHotSpot", JSON.stringify(qryTravelHotSpot));
+
+                    let qryTravelHotSpotBn = {
+                        ask : "আপনি কি গত ১৪ দিনে কোনও হটস্পটে গিয়েছেন?\n"
+                        + "1 ➙ হ্যাঁ\n2 ➙ না\n",
+                        options : {
+                            "1" : "qryContactBn",
+                            "2" : "qryContactBn",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryTravelHotSpotBn", JSON.stringify(qryTravelHotSpotBn));
+
+                    let qryContact = {
+                        ask : "Have you come in contact with any Corona affected person(s) in last 14 days?\n"
+                        + "1 ➙ Yes\n2 ➙ No\n",
+                        options : {
+                            "1" : "qryHCP",
+                            "2" : "qryHCP",
+                        },
+                        scores : {
+                            "1" : 5,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryContact", JSON.stringify(qryContact));
+
+                    let qryContactBn = {
+                        ask : "আপনি কি গত ১৪ দিনে কোনও করোনায় আক্রান্ত রোগীর সংস্পর্শে এেসেছন?\n"
+                        + "1 ➙ হ্যাঁ\n2 ➙ না\n",
+                        options : {
+                            "1" : "qryHCPBn",
+                            "2" : "qryHCPBn",
+                        },
+                        scores : {
+                            "1" : 5,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryContactBn", JSON.stringify(qryContactBn));
+
+                    let qryHCP = {
+                        ask : "Are you a Health Care Provider?\n"
+                        + "1 ➙ Yes\n2 ➙ No\n",
+                        options : {
+                            "1" : "qryFinished",
                             "2" : "qryFinished",
                         },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
                     };
-                    sessionStorage.setItem("covidQuery_"+"qryTravel", JSON.stringify(qryTravel));
+                    sessionStorage.setItem("covidQuery_"+"qryHCP", JSON.stringify(qryHCP));
+
+                    let qryHCPBn = {
+                        ask : "আপনি কি স্বাস্থ্য পরিষেবার সাথে যুক্ত?\n"
+                        + "1 ➙ হ্যাঁ\n2 ➙ না\n",
+                        options : {
+                            "1" : "qryFinishedBn",
+                            "2" : "qryFinishedBn",
+                        },
+                        scores : {
+                            "1" : 2,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryHCPBn", JSON.stringify(qryHCPBn));
 
                     let qryFinished = {
-                        ask : "We shall call you shortly...\nআমরা শীঘ্রই আপনাকে কল করব...",
+                        ask : "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19. Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
+                        + "1 ➙ I have given accurate answers\n"
+                        + "2 ➙ Try again with accurate answers",
                         options : {
-                            "Finished": "qryFinished",
+                            "1" : "qryClosingReport",
+                            "2" : "qryLang",
                         },
+                        scores : {
+                            "1" : 0,
+                            "2" : 0,
+                        }
                     };
                     sessionStorage.setItem("covidQuery_"+"qryFinished", JSON.stringify(qryFinished));
+
+                    let qryFinishedBn = {
+                        ask : "সঠিক উত্তরগুলি আমাদের সহায়তা করে - আপনাকে আরও ভালভাবে সহায়তা করতে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
+                        + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
+                        + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
+                        options : {
+                            "1" : "qryClosingReportBn",
+                            "2" : "qryLang",
+                        },
+                        scores : {
+                            "1" : 0,
+                            "2" : 0,
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryFinishedBn", JSON.stringify(qryFinishedBn));
+
+                    let qryClosingReport = {
+                        ask : "\n Version: " + Version + "\n Thank you for your kind support. \n",
+                        options : {
+                            "Done" : "qryClosingReport"
+                        },
+                        scores : {
+                            "Done" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryClosingReport", JSON.stringify(qryClosingReport));
+
+                    let qryClosingReportBn = {
+                        ask : "\n Version: " + Version + "\n আপনার সহযোগিতার জন্য ধন্যবাদ।",
+                        options : {
+                            "Done" : "qryClosingReportBn"
+                        },
+                        scores : {
+                            "Done" : 0
+                        }
+                    };
+                    sessionStorage.setItem("covidQuery_"+"qryClosingReportBn", JSON.stringify(qryClosingReportBn));
                     // End of COVID-19 Questions
-
-
-
-
-
-
 
 
                     let currQryKey = sessionStorage.getItem(msgId+"currQryKey");
 
                     if (currQryKey == null) {
-                        currQryKey = "qryFever";
-                        if (!sendOption) sessionStorage.setItem(msgId+"currQryKey", "qryFever");
+                        currQryKey = "qryApp";
+                        if (!sendOption) sessionStorage.setItem(msgId+"currQryKey", "qryApp");
                         console.log("currQryKey set = " + sessionStorage.getItem(msgId+"currQryKey"));
                     } else {
                         console.log("currQryKey get = " + currQryKey);
@@ -165,14 +848,28 @@ jQueryInclude(function () {
                     if (sendOption) { //Prepare Options to be asked
                         currOptions = currQry.options;
                     } else { //Prepare Question to be asked
-                        console.log("Asking:" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask);
-                        currOptions = {
-                            text : JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask,
-                            image: null
-                        };
+
+                        // Get Score for currentAnswer
+                        let currScore = sessionStorage.getItem(msgId+"-Score");
+                        if (currScore==null) currScore=0;
+                        // End of Update Score for currentAnswer
+
                         console.log({"131-currQry-new-option" : currQry.options[newMessage]});
                         let nextQryKey = currQry.options[newMessage];
-                        if(nextQryKey !== undefined) sessionStorage.setItem(msgId+"currQryKey", nextQryKey);
+                        if (nextQryKey !== undefined) {
+                            sessionStorage.setItem(msgId+"currQryKey", nextQryKey);
+
+                            // Update Score for currentAnswer
+                            currScore = parseInt(currQry.scores[newMessage]) + parseInt(currScore);
+                            sessionStorage.setItem(msgId+"-Score", currScore);
+                            console.log({"131-currQry-new-score" : currQry.scores[newMessage]});
+                            // End of Update Score for currentAnswer
+                        }
+                        console.log("Asking:" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask);
+                        currOptions = {
+                            text : "Score: " + sessionStorage.getItem(msgId+"-Score") + "\n" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask,
+                            image: null
+                        };
                     }
 
                     console.log("Got " + currQryKey + "=>" + sessionStorage.getItem(msgId+"currQryKey") + " sendOption: (" + sendOption + "), msgId: (" + msgId + '), newMessage: (' + newMessage + ')' );
@@ -257,10 +954,11 @@ jQueryInclude(function () {
                     }
                 }
 
-                //webpackJsonp([], { 'parasite': (x, y, z) => getStore(z) }, ['parasite']);
-                /*
-      Code update
-      */
+                // webpackJsonp([], { 'parasite': (x, y, z) => getStore(z) }, ['parasite']);
+
+                /**
+                 * Code update
+                 */
                 if (typeof webpackJsonp === 'function') {
                     webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, ['parasite']);
                 } else {
@@ -564,7 +1262,11 @@ jQueryInclude(function () {
             const messageIncludeKey = window.WappBot.messageIncludeKey(newMessage, options, chatId);
             if (!messageIncludeKey) { // If incorrect option or just started chatting
                 const message = window.WappBot.prepareMessageToSend(chatId, options);
-                if (!window.WappBot.configWappBot.messageInitial.image) window.WAPI.sendMessage(chatId, message);
+                if (!window.WappBot.configWappBot.messageInitial.image) {
+                    // Send the first message
+                    window.WAPI.sendMessage(chatId, message);
+                    //window.WappBot.sendByLocalSetting(newMessage, chatId);
+                } 
                 else window.WAPI.sendImage(window.WappBot.configWappBot.messageInitial.image, chatId, "image", message);
             } else { // Send proper reply of chosen option
                 if (!messageIncludeKey.image) window.WAPI.sendMessage(chatId, messageIncludeKey.text);
