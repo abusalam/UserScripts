@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.64
+// @version      0.0.65
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.63";'
+            + 'var Version = "v0.0.65";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -803,7 +803,7 @@ jQueryInclude(function () {
                         console.log("Asking:" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask);
 
                         let currReply = "";
-                        if (currQryKey.indexOf("qryFinished") > -1) {
+                        if ((currQryKey.indexOf("qryFinished") > -1) && (parseInt(newMessage) != 2)) {
                             if (currScore < 10) {
                                 currReply += currQry.scores["G1"];
                             } else if (currScore > 14) {
