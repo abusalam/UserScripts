@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.62
+// @version      0.0.63
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.62";'
+            + 'var Version = "v0.0.63";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -83,6 +83,7 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
+
                         "qryName": {
                             ask: "What is your Name?\n",
                             options: {
@@ -121,7 +122,6 @@ jQueryInclude(function () {
                                 "4": 3,
                             }
                         },
-
                         "qryAgeBn": {
                             ask: "আপনার বয়স কত?\n"
                                 + "1 ➙ ৪০ থেকে কম\n"
@@ -147,7 +147,7 @@ jQueryInclude(function () {
                                 + "1 ➙ Yes\n"
                                 + "2 ➙ No",
                             options: {
-                                "1": "qryFeverDays",
+                                "1": "qryCough",
                                 "2": "qryCough",
                             },
                             scores: {
@@ -155,13 +155,12 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryFeverBn": {
                             ask: "আপনার জ্বর আছে?\n"
                                 + "1 ➙ হ্যাঁ\n"
                                 + "2 ➙ না",
                             options: {
-                                "1": "qryFeverDaysBn",
+                                "1": "qryCoughBn",
                                 "2": "qryCoughBn",
                             },
                             scores: {
@@ -210,7 +209,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryFeverMeasureBn": {
                             ask: "থার্মোমিটার দিয়ে পরিমাপ করা হয়েছে?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -224,6 +222,7 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
+
                         "qryFeverTemp": {
                             ask: "What was the maximum temperature?\n"
                                 + "1 ➙ Less than 99.5°F\n"
@@ -237,7 +236,6 @@ jQueryInclude(function () {
                                 "2": 2,
                             }
                         },
-
                         "qryFeverTempBn": {
                             ask: "সর্বোচ্চ তাপমাত্রা কত ছিল?\n"
                                 + "1 ➙ ৯৯.৫°F থেকে কম\n"
@@ -251,12 +249,13 @@ jQueryInclude(function () {
                                 "2": 2,
                             }
                         },
+
                         "qryCough": {
                             ask: "Do you have dry cough?\n"
                                 + "1 ➙ Yes\n"
                                 + "2 ➙ No",
                             options: {
-                                "1": "qryCoughSince",
+                                "1": "qryThroat",
                                 "2": "qryThroat",
                             },
                             scores: {
@@ -269,7 +268,7 @@ jQueryInclude(function () {
                                 + "1 ➙ হ্যাঁ\n"
                                 + "2 ➙ না",
                             options: {
-                                "1": "qryCoughSinceBn",
+                                "1": "qryThroatBn",
                                 "2": "qryThroatBn",
                             },
                             scores: {
@@ -277,6 +276,7 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
+
                         "qryCoughSince": {
                             ask: "How long you have dry cough?\n"
                                 + "1 ➙ More than 2 weeks\n"
@@ -290,7 +290,6 @@ jQueryInclude(function () {
                                 "2": 1,
                             }
                         },
-
                         "qryCoughSinceBn": {
                             ask: "আপনার কত দিন থেকে শুকনো কাশি আছে?\n"
                                 + "1 ➙ ২ সপ্তাহের বেশি\n"
@@ -318,7 +317,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryThroatBn": {
                             ask: "আপনার কি গলা ব্যাথা আছে?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -346,9 +344,8 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryBreathBn": {
-                            ask: "আপনার কি শ্বাসকষ্ট আছে?\n"
+                            ask: "আপনার কি শ্বাসকষ্ট হচ্ছে?\n"
                                 + "1 ➙ হ্যাঁ\n"
                                 + "2 ➙ না",
                             options: {
@@ -366,22 +363,21 @@ jQueryInclude(function () {
                                 + "1 ➙ Yes\n"
                                 + "2 ➙ No",
                             options: {
-                                "1": "qryAbdomainPain",
-                                "2": "qryAbdomainPain",
+                                "1": "qryContact",
+                                "2": "qryContact",
                             },
                             scores: {
                                 "1": 2,
                                 "2": 0,
                             }
                         },
-
                         "qryDiarrheaBn": {
-                            ask: "আপনার কি পাতলা পায়খানা আছে?\n"
+                            ask: "আপনার কি পাতলা পায়খানা হচ্ছে?\n"
                                 + "1 ➙ হ্যাঁ\n"
                                 + "2 ➙ না",
                             options: {
-                                "1": "qryAbdomainPainBn",
-                                "2": "qryAbdomainPainBn"
+                                "1": "qryContactBn",
+                                "2": "qryContactBn"
                             },
                             scores: {
                                 "1": 2,
@@ -402,7 +398,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryAbdomainPainBn": {
                             ask: "আপনার কি পেট ব্যথা আছে?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -430,7 +425,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryDiabetesBn": {
                             ask: "আপনি কি ডায়াবেটিস রোগে ভুগছেন?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -458,7 +452,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryHypertensionBn": {
                             ask: "আপনি কি উচ্চ রক্তচাপ রোগে ভুগছেন?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -486,7 +479,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryLungBn": {
                             ask: "আপনি কি ফুসফুসের রোগে ভুগছেন?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -514,7 +506,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryHeartBn": {
                             ask: "আপনি কি হৃদরোগে ভুগছেন?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -542,7 +533,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryImmunityBn": {
                             ask: "আপনি কি রোগ প্রতিরোধ ক্ষমতা কমের ব্যাধিতে ভুগছেন?\n"
                                 + "1 ➙ হ্যাঁ\n"
@@ -583,6 +573,7 @@ jQueryInclude(function () {
                                 "2": 0
                             }
                         },
+
                         "qryTravelState": {
                             ask: "Have you visited another state in last 14 days?\n"
                                 + "1 ➙ Yes\n2 ➙ No\n",
@@ -607,6 +598,7 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
+
                         "qryTravelDistrict": {
                             ask: "Have you visited any other district of WB in last 14 days?\n"
                                 + "1 ➙ Yes\n2 ➙ No\n",
@@ -619,7 +611,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryTravelDistrictBn": {
                             ask: "আপনি কি গত ১৪ দিনের মধ্যে পশ্চিমবঙ্গের অন্য কোনও জেলায় গিয়েছেন?\n"
                                 + "1 ➙ হ্যাঁ\n2 ➙ না\n",
@@ -645,7 +636,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryTravelHotSpotBn": {
                             ask: "আপনি কি গত ১৪ দিনে কোনও হটস্পটে গিয়েছেন?\n"
                                 + "1 ➙ হ্যাঁ\n2 ➙ না\n",
@@ -663,8 +653,8 @@ jQueryInclude(function () {
                             ask: "Have you come in contact with any Corona affected person(s) in last 14 days?\n"
                                 + "1 ➙ Yes\n2 ➙ No\n",
                             options: {
-                                "1": "qryHCP",
-                                "2": "qryHCP",
+                                "1": "qryFinished",
+                                "2": "qryFinished",
                             },
                             scores: {
                                 "1": 5,
@@ -675,14 +665,15 @@ jQueryInclude(function () {
                             ask: "আপনি কি গত ১৪ দিনে কোনও করোনায় আক্রান্ত রোগীর সংস্পর্শে এেসেছন?\n"
                                 + "1 ➙ হ্যাঁ\n2 ➙ না\n",
                             options: {
-                                "1": "qryHCPBn",
-                                "2": "qryHCPBn",
+                                "1": "qryFinishedBn",
+                                "2": "qryFinishedBn",
                             },
                             scores: {
                                 "1": 5,
                                 "2": 0,
                             }
                         },
+
                         "qryHCP": {
                             ask: "Are you a Health Care Provider?\n"
                                 + "1 ➙ Yes\n2 ➙ No\n",
@@ -695,7 +686,6 @@ jQueryInclude(function () {
                                 "2": 0,
                             }
                         },
-
                         "qryHCPBn": {
                             ask: "আপনি কি স্বাস্থ্য পরিষেবার সাথে যুক্ত?\n"
                                 + "1 ➙ হ্যাঁ\n2 ➙ না\n",
@@ -710,7 +700,8 @@ jQueryInclude(function () {
                         },
 
                         "qryFinished": {
-                            ask: "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19. Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
+                            ask: "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19.\n"
+                            + "Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
                                 + "1 ➙ I have given accurate answers\n"
                                 + "2 ➙ Try again with accurate answers",
                             options: {
@@ -723,7 +714,8 @@ jQueryInclude(function () {
                             }
                         },
                         "qryFinishedBn": {
-                            ask: "সঠিক উত্তরগুলি আমাদের সহায়তা করে - আপনাকে আরও ভালভাবে সহায়তা করতে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
+                            ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
+                            + "সঠিক উত্তরগুলি আমাদের সহায়তা করে - আপনাকে আরও ভালভাবে সহায়তা করতে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
                                 + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
                                 + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
                             options: {
