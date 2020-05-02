@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.63
+// @version      0.0.64
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -701,7 +701,7 @@ jQueryInclude(function () {
 
                         "qryFinished": {
                             ask: "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19.\n"
-                            + "Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
+                                + "Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
                                 + "1 ➙ I have given accurate answers\n"
                                 + "2 ➙ Try again with accurate answers",
                             options: {
@@ -711,11 +711,14 @@ jQueryInclude(function () {
                             scores: {
                                 "1": 0,
                                 "2": 0,
+                                "G1": "Stay at home maintaining social distances, hand hygiene and using mask. Please repeat this assessment if any new symptom arises.\n",
+                                "G2": "Please consult your nearest doctor or Health Facility. Stay at home maintaining social distances, hand hygiene and using mask.\n",
+                                "G3": "You are at risk. Our team will contact you shortly. Please keep your mobile phone open and wait for the call.\n",
                             }
                         },
                         "qryFinishedBn": {
                             ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
-                            + "সঠিক উত্তরগুলি আমাদের সহায়তা করে - আপনাকে আরও ভালভাবে সহায়তা করতে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
+                                + "সঠিক উত্তরগুলি আমাদের সহায়তা করে - আপনাকে আরও ভালভাবে সহায়তা করতে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
                                 + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
                                 + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
                             options: {
@@ -725,6 +728,9 @@ jQueryInclude(function () {
                             scores: {
                                 "1": 0,
                                 "2": 0,
+                                "G1": "বাড়ীতে থাকুন সামাজিক দূরত্ব বজায় রাখুন, আপনার হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
+                                "G2": "আপনার নিকটবর্তী ডাক্তার বা স্বাস্থ্য সুবিধার সাথে পরামর্শ করুন। বাড়ীতে থাকুন সামাজিক দূরত্ব বজায় রাখুন, আপনার হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
+                                "G3": "আপনি ঝুঁকিতে আছেন আমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে। আপনার মোবাইল ফোনটি উন্মুক্ত রাখুন এবং কলটির জন্য অপেক্ষা করুন।",
                             }
                         },
                         "qryClosingReport": {
@@ -795,8 +801,21 @@ jQueryInclude(function () {
                             // End of Update Score for currentAnswer
                         }
                         console.log("Asking:" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask);
+
+                        let currReply = "";
+                        if (currQryKey.indexOf("qryFinished") > -1) {
+                            if (currScore < 10) {
+                                currReply += currQry.scores["G1"];
+                            } else if (currScore > 14) {
+                                currReply += currQry.scores["G3"];
+                            } else {
+                                currReply += currQry.scores["G2"];
+                            }
+                        } else {
+                            currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask;
+                        }
                         currOptions = {
-                            text: "Score: " + sessionStorage.getItem(msgId + "-Score") + "\n" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask,
+                            text: currReply,
                             image: null
                         };
                     }
