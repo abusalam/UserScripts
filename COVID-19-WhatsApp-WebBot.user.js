@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.67
+// @version      0.0.68
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.67";'
+            + 'var Version = "v0.0.68";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -29,20 +29,7 @@ function jQueryInclude(callback) {
 /* eslint-disable */
 
 jQueryInclude(function () {
-    jQ(".xZ93f").text("Welcome to TeleMedinicine Helpline, Malda");
-
     setTimeout(function () {
-
-        setInterval(function () {
-            if (!jQ("#covid-tag").length) {
-                if (jQ("._5SiUq").length) {
-                    jQ("._5SiUq").after('<span id="covid-tag">COVID-19 Helpline Malda ' + Version + '</span>');
-                } else {
-                    jQ(".P8cO8").before('<div style="padding-top:20px" id="covid-tag">COVID-19 Helpline Malda ' + Version + '</div>');
-                }
-            }
-        }, 2000);
-
         window.WappBot = {
             configWappBot: {
                 useApi: false,
@@ -679,7 +666,7 @@ jQueryInclude(function () {
                             }
                         },
                         "qryContactBn": {
-                            ask: "আপনি কি গত ১৪ দিনে কোনও করোনায় আক্রান্ত রোগীর সংস্পর্শে এেসেছন?\n"
+                            ask: "আপনি কি গত ১৪ দিনে কোনও করোনায় আক্রান্ত রোগীর সংস্পর্শে এসেছেন?\n"
                                 + "1 ➙ হ্যাঁ\n2 ➙ না\n",
                             options: {
                                 "1": "qryFinishedBn",
@@ -735,7 +722,7 @@ jQueryInclude(function () {
                         },
                         "qryFinishedBn": {
                             ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
-                                + "সঠিক উত্তরগুলি আমাদের সহায়তা করে - আপনাকে আরও ভালভাবে সহায়তা করতে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
+                                + "সঠিক উত্তরগুলি আপনাকে আরও ভালভাবে সহায়তা করতে আমাদের সহায়তা করে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
                                 + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
                                 + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
                             options: {
@@ -745,13 +732,13 @@ jQueryInclude(function () {
                             scores: {
                                 "1": 0,
                                 "2": 0,
-                                "G1": "বাড়ীতে থাকুন সামাজিক দূরত্ব বজায় রাখুন, আপনার হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
-                                "G2": "আপনার নিকটবর্তী ডাক্তার বা স্বাস্থ্য সুবিধার সাথে পরামর্শ করুন। বাড়ীতে থাকুন সামাজিক দূরত্ব বজায় রাখুন, আপনার হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
-                                "G3": "যদি আপনার তথ্য সঠিক হয় তবে আপনি করোনায় সংক্রমণের ঝুঁকিতে আছেন। আমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে। আপনার মোবাইল ফোনটি চালু রাখুন এবং ফোন কলের জন্য অপেক্ষা করুন।",
+                                "G1": "বাড়ীতে থাকুন, সামাজিক দূরত্ব বজায় রাখুন, নিয়মিত হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
+                                "G2": "আপনার নিকটবর্তী ডাক্তারের সাথে অথবা স্বাস্থ্য কেন্দ্রে যোগাযোগ করুন। বাড়ীতে থাকুন সামাজিক দূরত্ব বজায় রাখুন, আপনার হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
+                                "G3": "যদি আপনার তথ্য সঠিক হয় তবে আপনি করোনায় সংক্রমণের ঝুঁকিতে আছেন। আমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে। আপনার মোবাইল ফোনটি চালু রাখুন এবং আমাদের ফোন কলের জন্য অপেক্ষা করুন।",
                             }
                         },
                         "qryClosingReport": {
-                            ask: "\n Version: " + Version + "\n Thank you for your kind support. \n",
+                            ask: "Thank you for your kind support. \n\n\nVersion: " + Version,
                             options: {
                                 "Done": "qryClosingReport"
                             },
@@ -760,7 +747,7 @@ jQueryInclude(function () {
                             }
                         },
                         "qryClosingReportBn": {
-                            ask: "\n Version: " + Version + "\n আপনার সহযোগিতার জন্য ধন্যবাদ।",
+                            ask: "আপনার সহযোগিতার জন্য ধন্যবাদ। \n\n\nVersion: " + Version,
                             options: {
                                 "Done": "qryClosingReportBn"
                             },
@@ -817,14 +804,22 @@ jQueryInclude(function () {
                             } else {
                                 currReply += currQry.scores["G2"];
                             }
-                            WAPI.getAllGroups((groups) => {
-                                console.log("GroupID: ", groups[0].__x_id._serialized);
-                                WAPI.sendMessage(groups.filter(
-                                    (group) => (
-                                        group.__x_name == sessionStorage.getItem("covidQuery_ReportToGroup").slice(1, -1)
-                                        )).__x_id._serialized, "*Name:* " + sessionStorage.getItem(msgId + "-Name")
-                                + "\n*Mobile No:* " + msgId.split("@", 1) + "\n*Score:* " + currScore + "\n*Advice:* " + currReply);
-                            });
+                            WAPI.sendMessage(
+                                WAPI.getAllGroups().find(
+                                    (group) => (group.__x_name == sessionStorage.getItem("covidQuery_ReportToGroup").slice(1, -1))
+                                ).__x_id._serialized, "*Name:* " + sessionStorage.getItem(msgId + "-Name")
+                                + "\n*Mobile No:* " + msgId.slice(2, -5) + "\n*Score:* " + currScore + "\n*Advice:* " + currReply
+                            );
+                            localStorage.setItem(
+                                "scoreReport_" + msgId.slice(2, -5),
+                                JSON.stringify(
+                                    {
+                                        Name: sessionStorage.getItem(msgId + "-Name"),
+                                        Score: currScore,
+                                        Timestamp: Date.now(),
+                                    }
+                                )
+                            );
                         } else {
                             currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask;
                         }
@@ -1295,6 +1290,6 @@ jQueryInclude(function () {
         window.addEventListener("beforeunload", window.WAPI._unloadInform, false);
         window.addEventListener("pageunload", window.WAPI._unloadInform, false);
         console.log("Application Ready");
+        jQ("._2LKlu").before('<div style="padding-bottom:20px;font-size:20px;" id="covid-tag">COVID-19 Helpline Malda ' + Version + '</div>');
     }, 10000);
-
 });
