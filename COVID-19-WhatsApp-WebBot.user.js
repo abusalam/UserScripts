@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.66
+// @version      0.0.67
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.66";'
+            + 'var Version = "v0.0.67";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -57,7 +57,6 @@ jQueryInclude(function () {
                     };
                 },
                 messageIncorrect: (chatId) => {
-                    console.log("Got-IncorrectReply:", chatId);
                     if (sessionStorage.getItem(chatId + "-currQryKey").indexOf("Bn") > -1) {
                         return {
                             text: "ভুল বিকল্প, দয়া করে উত্তর দিন:\n"
@@ -782,21 +781,10 @@ jQueryInclude(function () {
                     if (currQryKey == null) {
                         currQryKey = "qryApp";
                         if (!sendOption) sessionStorage.setItem(msgId + "-currQryKey", "qryApp");
-                        console.log("currQryKey set = " + sessionStorage.getItem(msgId + "-currQryKey"));
-                    } else {
-                        console.log("currQryKey get = " + currQryKey);
                     }
 
                     let storageQryKey = "covidQuery_" + currQryKey;
-
-                    console.log("storageQryKey = " + storageQryKey);
-
-                    console.log("126-storage-get:" + sessionStorage.getItem(storageQryKey));
-
                     let currQry = JSON.parse(sessionStorage.getItem("covidQuery_" + currQryKey));
-
-                    console.log({ "127-msgID": msgId, "currQry": currQry });
-
 
                     if (sendOption) { //Prepare Options to be asked
                         currOptions = currQry.options;
@@ -807,7 +795,6 @@ jQueryInclude(function () {
                         if (currScore == null) currScore = 0;
                         // End of Update Score for currentAnswer
 
-                        console.log({ "131-currQry-new-option": currQry.options[newMessage] });
                         let nextQryKey = currQry.options[newMessage];
                         if (nextQryKey !== undefined) {
                             sessionStorage.setItem(msgId + "-currQryKey", nextQryKey);
@@ -816,7 +803,7 @@ jQueryInclude(function () {
                             currScore = parseInt(currQry.scores[newMessage]) + parseInt(currScore);
                             if (nextQryKey == "qryLang") currScore = 0;
                             sessionStorage.setItem(msgId + "-Score", currScore);
-                            console.log({ "131-currQry-new-score": currQry.scores[newMessage] });
+                            //console.log({ "131-currQry-new-score": currQry.scores[newMessage] });
                             // End of Update Score for currentAnswer
                         }
                         console.log("Asking:" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask);
@@ -830,12 +817,13 @@ jQueryInclude(function () {
                             } else {
                                 currReply += currQry.scores["G2"];
                             }
-                            WAPI.getAllGroups(function (groups) {
-                                if (groups[0].__x_name == sessionStorage.getItem("covidQuery_ReportToGroup").slice(1, -1)) {
-                                    console.log("GroupID: ", groups[0].__x_id._serialized);
-                                    WAPI.sendMessage(groups[0].__x_id._serialized, "Name: " + sessionStorage.getItem(msgId + "-Name")
-                                        + "\nMobine No: " + msgId.split("@", 1) + "\nScore: " + currScore + "\nAdvice: " + currReply);
-                                }
+                            WAPI.getAllGroups((groups) => {
+                                console.log("GroupID: ", groups[0].__x_id._serialized);
+                                WAPI.sendMessage(groups.filter(
+                                    (group) => (
+                                        group.__x_name == sessionStorage.getItem("covidQuery_ReportToGroup").slice(1, -1)
+                                        )).__x_id._serialized, "*Name:* " + sessionStorage.getItem(msgId + "-Name")
+                                + "\n*Mobile No:* " + msgId.split("@", 1) + "\n*Score:* " + currScore + "\n*Advice:* " + currReply);
                             });
                         } else {
                             currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask;
@@ -1218,7 +1206,6 @@ jQueryInclude(function () {
         };
 
         window.WappBot.messageIncludeKey = (message, options, chatId) => {
-            console.log({ "msgIncludeKey": options });
             if (options.length == 1) {
                 if (message == options[0]) {
                     delete window.WappBot.configWappBot.ignoreChat[window.WappBot.configWappBot.ignoreChat.indexOf(chatId)];
@@ -1232,7 +1219,6 @@ jQueryInclude(function () {
                 if (message.toUpperCase().includes(options[i].toUpperCase()))
                     return window.WappBot.configWappBot.messageOption(false, chatId, message);
             }
-            console.log("Incorrect Option");
             return false;
         };
 
@@ -1258,7 +1244,6 @@ jQueryInclude(function () {
                 if (!window.WappBot.configWappBot.messageInitial.image) {
                     // Send the first message
                     window.WAPI.sendMessage(chatId, message);
-                    //window.WappBot.sendByLocalSetting(newMessage, chatId);
                 }
                 else window.WAPI.sendImage(window.WappBot.configWappBot.messageInitial.image, chatId, "image", message);
             } else { // Send proper reply of chosen option
@@ -1282,6 +1267,7 @@ jQueryInclude(function () {
         window.WAPI._newMessagesListener = window.Store.Msg.on("add", newMessage => {
             if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
                 let message = window.WAPI.processMessageObj(newMessage, false, false);
+                console.log("NewMessage", message);
                 if (message) {
                     if (window.WappBot.configWappBot.useApi)
                         window.WappBot.sendByAPIWappBot(message.body, message.chatId._serialized);
@@ -1309,7 +1295,6 @@ jQueryInclude(function () {
         window.addEventListener("beforeunload", window.WAPI._unloadInform, false);
         window.addEventListener("pageunload", window.WAPI._unloadInform, false);
         console.log("Application Ready");
-        //console.log(window.WappBot.configWappBot.messageOption(true, "", "hi"));
     }, 10000);
 
 });
