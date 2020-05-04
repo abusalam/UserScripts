@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.69
+// @version      0.0.70
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.69";'
+            + 'var Version = "";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -36,732 +36,28 @@ jQueryInclude(function () {
                 uriApi: "https://wapp-bot.herokuapp.com/message",
                 ignoreChat: [],
                 messageInitial: (chatId) => {
-                    WAPI.sendMessage(chatId, "Welcome to Telemedicine Helpline, Malda\nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম");
                     return {
-                        text: "Please reply with 1 or 2 to continue...\nদয়া করে 1 বা 2 দিয়ে উত্তর দিন\n\n"
-                            + "1 ➙ English\n2 ➙ বাংলা\n",
+                        text: this.covidQueries.msgWelcome,
                         image: null //"https://pmrpressrelease.com/wp-content/uploads/2019/05/Telehealth-1.jpg"
                     };
                 },
                 messageIncorrect: (chatId) => {
                     if (sessionStorage.getItem(chatId + "-currQryKey").indexOf("Bn") > -1) {
                         return {
-                            text: "ভুল বিকল্প, দয়া করে উত্তর দিন:\n"
+                            text: this.covidQueries.msgOptionBn
                         };
                     } else if (sessionStorage.getItem(chatId + "-currQryKey") != "qryApp") {
                         return {
-                            text: "Incorrect option, please reply with: \n"
+                            text: this.covidQueries.msgOptionBn
                         };
                     } else {
                         return {
-                            text: "Incorrect option, please reply with: \nভুল বিকল্প, দয়া করে এর সাথে উত্তর দিন:\n"
+                            text: this.covidQueries.msgOption + this.covidQueries.msgOptionBn
                         };
                     }
                 },
 
                 messageOption: (sendOption, msgId, newMessage) => {
-
-                    let covidQueries = {
-                        "qryApp": {
-                            ask: "Please Select Questionaire?\n"
-                                + "1. Arogya Setu Questionaire\n2. Malda TeleMedicine Questionaire\n",
-                            options: {
-                                "1": "qryName",
-                                "2": "qryNameBn",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 0,
-                            },
-                        },
-                        "qryLang": {
-                            ask: "Please Select language\nভাষা নির্বাচন করুন\n"
-                                + "1 ➙ English\n"
-                                + "2 ➙ বাংলা\n",
-                            options: {
-                                "1": "qryName",
-                                "2": "qryNameBn",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryName": {
-                            ask: "What is your Name?\n",
-                            options: {
-                                "Name": "qryAge"
-                            },
-                            scores: {
-                                "Name": 0
-                            }
-                        },
-                        "qryNameBn": {
-                            ask: "আপনার নাম কি?\n",
-                            options: {
-                                "Name": "qryAgeBn"
-                            },
-                            scores: {
-                                "Name": 0
-                            }
-                        },
-
-                        "qryAge": {
-                            ask: "What is your Age?\n"
-                                + "1 ➙ Less than 40\n"
-                                + "2 ➙ 40 - 50\n"
-                                + "3 ➙ 50 - 60\n"
-                                + "4 ➙ More than 60",
-                            options: {
-                                "1": "qryFever",
-                                "2": "qryFever",
-                                "3": "qryFever",
-                                "4": "qryFever",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 1,
-                                "3": 2,
-                                "4": 3,
-                            }
-                        },
-                        "qryAgeBn": {
-                            ask: "আপনার বয়স কত?\n"
-                                + "1 ➙ ৪০ থেকে কম\n"
-                                + "2 ➙ 40 থেকে 50\n"
-                                + "3 ➙ 50 থেকে 60\n"
-                                + "4 ➙ 60 থেকে বেশি",
-                            options: {
-                                "1": "qryFeverBn",
-                                "2": "qryFeverBn",
-                                "3": "qryFeverBn",
-                                "4": "qryFeverBn",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 1,
-                                "3": 2,
-                                "4": 3,
-                            }
-                        },
-
-                        "qryFever": {
-                            ask: "Do you have fever?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryCough",
-                                "2": "qryCough",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-                        "qryFeverBn": {
-                            ask: "আপনার জ্বর আছে?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryCoughBn",
-                                "2": "qryCoughBn",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryFeverDays": {
-                            ask: "How long is the fever persisting?\n"
-                                + "1 ➙ Less than 3 days\n"
-                                + "2 ➙ More than 3 days",
-                            options: {
-                                "1": "qryFeverMeasure",
-                                "2": "qryFeverMeasure",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 2,
-                            }
-                        },
-                        "qryFeverDaysBn": {
-                            ask: "জ্বর কত দিন রয়েছে?\n"
-                                + "1 ➙ ৩ দিনের থেকে কম\n"
-                                + "2 ➙ ৩ দিনের থেকে বেশি",
-                            options: {
-                                "1": "qryFeverMeasureBn",
-                                "2": "qryFeverMeasureBn",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 2,
-                            }
-                        },
-
-                        "qryFeverMeasure": {
-                            ask: "Measured it with thermometer?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryFeverTemp",
-                                "2": "qryCough"
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 0,
-                            }
-                        },
-                        "qryFeverMeasureBn": {
-                            ask: "থার্মোমিটার দিয়ে পরিমাপ করা হয়েছে?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryFeverTempBn",
-                                "2": "qryCoughBn"
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryFeverTemp": {
-                            ask: "What was the maximum temperature?\n"
-                                + "1 ➙ Less than 99.5°F\n"
-                                + "2 ➙ More than 99.5°F",
-                            options: {
-                                "1": "qryCough",
-                                "2": "qryCough"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 2,
-                            }
-                        },
-                        "qryFeverTempBn": {
-                            ask: "সর্বোচ্চ তাপমাত্রা কত ছিল?\n"
-                                + "1 ➙ ৯৯.৫°F থেকে কম\n"
-                                + "2 ➙ ৯৯.৫°F থেকে বেশি",
-                            options: {
-                                "1": "qryCoughBn",
-                                "2": "qryCoughBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 2,
-                            }
-                        },
-
-                        "qryCough": {
-                            ask: "Do you have dry cough?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryThroat",
-                                "2": "qryThroat",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-                        "qryCoughBn": {
-                            ask: "আপনার কি শুকনো কাশি আছে?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryThroatBn",
-                                "2": "qryThroatBn",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryCoughSince": {
-                            ask: "How long you have dry cough?\n"
-                                + "1 ➙ More than 2 weeks\n"
-                                + "2 ➙ Less than 2 weeks",
-                            options: {
-                                "1": "qryThroat",
-                                "2": "qryThroat",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 1,
-                            }
-                        },
-                        "qryCoughSinceBn": {
-                            ask: "আপনার কত দিন থেকে শুকনো কাশি আছে?\n"
-                                + "1 ➙ ২ সপ্তাহের বেশি\n"
-                                + "2 ➙ ২ সপ্তাহের কম",
-                            options: {
-                                "1": "qryThroatBn",
-                                "2": "qryThroatBn",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 1,
-                            }
-                        },
-
-                        "qryThroat": {
-                            ask: "Do you have sore throat?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryBreath",
-                                "2": "qryBreath",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-                        "qryThroatBn": {
-                            ask: "আপনার কি গলা ব্যাথা আছে?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryBreathBn",
-                                "2": "qryBreathBn",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryBreath": {
-                            ask: "Are you suffering from shortness of breath?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryDiarrhea",
-                                "2": "qryDiarrhea",
-                            },
-                            scores: {
-                                "1": 5,
-                                "2": 0,
-                            }
-                        },
-                        "qryBreathBn": {
-                            ask: "আপনার কি শ্বাসকষ্ট হচ্ছে?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryDiarrheaBn",
-                                "2": "qryDiarrheaBn"
-                            },
-                            scores: {
-                                "1": 5,
-                                "2": 0
-                            }
-                        },
-
-                        "qryDiarrhea": {
-                            ask: "Do you have diarrhea?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryContact",
-                                "2": "qryContact",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryDiarrheaBn": {
-                            ask: "আপনার কি পাতলা পায়খানা হচ্ছে?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryContactBn",
-                                "2": "qryContactBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qryAbdomainPain": {
-                            ask: "Do you have abdominal pain?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryDiabetes",
-                                "2": "qryDiabetes",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryAbdomainPainBn": {
-                            ask: "আপনার কি পেট ব্যথা আছে?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryDiabetesBn",
-                                "2": "qryDiabetesBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qryDiabetes": {
-                            ask: "Are you suffering from diabetes?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryHypertension",
-                                "2": "qryHypertension",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryDiabetesBn": {
-                            ask: "আপনি কি ডায়াবেটিস রোগে ভুগছেন?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryHypertensionBn",
-                                "2": "qryHypertensionBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qryHypertension": {
-                            ask: "Are you suffering from Hypertension?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryLung",
-                                "2": "qryLung",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryHypertensionBn": {
-                            ask: "আপনি কি উচ্চ রক্তচাপ রোগে ভুগছেন?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryLungBn",
-                                "2": "qryLungBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qryLung": {
-                            ask: "Are you suffering from Lung disease?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryHeart",
-                                "2": "qryHeart",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryLungBn": {
-                            ask: "আপনি কি ফুসফুসের রোগে ভুগছেন?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryHeartBn",
-                                "2": "qryHeartBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qryHeart": {
-                            ask: "Are you suffering from Heart disease?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryImmunity",
-                                "2": "qryImmunity",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryHeartBn": {
-                            ask: "আপনি কি হৃদরোগে ভুগছেন?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryImmunityBn",
-                                "2": "qryImmunityBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qryImmunity": {
-                            ask: "Are you suffering from Immunity disorder?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qrySteroid",
-                                "2": "qrySteroid",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryImmunityBn": {
-                            ask: "আপনি কি রোগ প্রতিরোধ ক্ষমতা কমের ব্যাধিতে ভুগছেন?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qrySteroidBn",
-                                "2": "qrySteroidBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qrySteroid": {
-                            ask: "Are you taking Steroids regularly as treatment?\n"
-                                + "1 ➙ Yes\n"
-                                + "2 ➙ No",
-                            options: {
-                                "1": "qryTravelState",
-                                "2": "qryTravelState",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qrySteroidBn": {
-                            ask: "আপনি কি চিকিৎসা হিসাবে নিয়মিত স্টেরয়েড গ্রহণ করেন?\n"
-                                + "1 ➙ হ্যাঁ\n"
-                                + "2 ➙ না",
-                            options: {
-                                "1": "qryTravelStateBn",
-                                "2": "qryTravelStateBn"
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0
-                            }
-                        },
-
-                        "qryTravelState": {
-                            ask: "Have you visited another state in last 14 days?\n"
-                                + "1 ➙ Yes\n2 ➙ No\n",
-                            options: {
-                                "1": "qryTravelDistrict",
-                                "2": "qryTravelDistrict",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-                        "qryTravelStateBn": {
-                            ask: "আপনি কি গত ১৪ দিনে অন্য কোনও রাজ্যে গিয়েছেন?\n"
-                                + "1 ➙ হ্যাঁ\n2 ➙ না\n",
-                            options: {
-                                "1": "qryTravelDistrictBn",
-                                "2": "qryTravelDistrictBn",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryTravelDistrict": {
-                            ask: "Have you visited any other district of WB in last 14 days?\n"
-                                + "1 ➙ Yes\n2 ➙ No\n",
-                            options: {
-                                "1": "qryTravelHotSpot",
-                                "2": "qryTravelHotSpot",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-                        "qryTravelDistrictBn": {
-                            ask: "আপনি কি গত ১৪ দিনের মধ্যে পশ্চিমবঙ্গের অন্য কোনও জেলায় গিয়েছেন?\n"
-                                + "1 ➙ হ্যাঁ\n2 ➙ না\n",
-                            options: {
-                                "1": "qryTravelHotSpotBn",
-                                "2": "qryTravelHotSpotBn",
-                            },
-                            scores: {
-                                "1": 1,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryTravelHotSpot": {
-                            ask: "Have you visited any Hot spot in last 14 days?\n"
-                                + "1 ➙ Yes\n2 ➙ No\n",
-                            options: {
-                                "1": "qryContact",
-                                "2": "qryContact",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-                        "qryTravelHotSpotBn": {
-                            ask: "আপনি কি গত ১৪ দিনে কোনও হটস্পটে গিয়েছেন?\n"
-                                + "1 ➙ হ্যাঁ\n2 ➙ না\n",
-                            options: {
-                                "1": "qryContactBn",
-                                "2": "qryContactBn",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryContact": {
-                            ask: "Have you come in contact with any Corona affected person(s) in last 14 days?\n"
-                                + "1 ➙ Yes\n2 ➙ No\n",
-                            options: {
-                                "1": "qryFinished",
-                                "2": "qryFinished",
-                            },
-                            scores: {
-                                "1": 5,
-                                "2": 0,
-                            }
-                        },
-                        "qryContactBn": {
-                            ask: "আপনি কি গত ১৪ দিনে কোনও করোনায় আক্রান্ত রোগীর সংস্পর্শে এসেছেন?\n"
-                                + "1 ➙ হ্যাঁ\n2 ➙ না\n",
-                            options: {
-                                "1": "qryFinishedBn",
-                                "2": "qryFinishedBn",
-                            },
-                            scores: {
-                                "1": 5,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryHCP": {
-                            ask: "Are you a Health Care Provider?\n"
-                                + "1 ➙ Yes\n2 ➙ No\n",
-                            options: {
-                                "1": "qryFinished",
-                                "2": "qryFinished",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-                        "qryHCPBn": {
-                            ask: "আপনি কি স্বাস্থ্য পরিষেবার সাথে যুক্ত?\n"
-                                + "1 ➙ হ্যাঁ\n2 ➙ না\n",
-                            options: {
-                                "1": "qryFinishedBn",
-                                "2": "qryFinishedBn",
-                            },
-                            scores: {
-                                "1": 2,
-                                "2": 0,
-                            }
-                        },
-
-                        "qryFinished": {
-                            ask: "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19.\n"
-                                + "Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
-                                + "1 ➙ I have given accurate answers\n"
-                                + "2 ➙ Try again with accurate answers",
-                            options: {
-                                "1": "qryClosingReport",
-                                "2": "qryLang",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 0,
-                                "G1": "Stay at home maintaining social distances, hand hygiene and using mask. Please repeat this assessment if any new symptom arises.\n",
-                                "G2": "Please consult your nearest doctor or Health Facility. Stay at home maintaining social distances, hand hygiene and using mask.\n",
-                                "G3": "You are at risk. Our team will contact you shortly. Please keep your mobile phone open and wait for the call.\n",
-                            }
-                        },
-                        "qryFinishedBn": {
-                            ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
-                                + "সঠিক উত্তরগুলি আপনাকে আরও ভালভাবে সহায়তা করতে আমাদের সহায়তা করে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
-                                + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
-                                + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
-                            options: {
-                                "1": "qryClosingReportBn",
-                                "2": "qryLang",
-                            },
-                            scores: {
-                                "1": 0,
-                                "2": 0,
-                                "G1": "বাড়ীতে থাকুন, সামাজিক দূরত্ব বজায় রাখুন, নিয়মিত হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
-                                "G2": "আপনার নিকটবর্তী ডাক্তারের সাথে অথবা স্বাস্থ্য কেন্দ্রে যোগাযোগ করুন।",
-                                "G3": "যদি আপনার তথ্য সঠিক হয় তবে আপনি করোনায় সংক্রমণের ঝুঁকিতে আছেন।\n\nআমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে। আপনার মোবাইল ফোনটি চালু রাখুন এবং আমাদের ফোন কলের জন্য অপেক্ষা করুন।",
-                            }
-                        },
-                        "qryClosingReport": {
-                            ask: "Thank you for your kind support. \n\n\nVersion: " + Version,
-                            options: {
-                                "Done": "qryClosingReport"
-                            },
-                            scores: {
-                                "Done": 0
-                            }
-                        },
-                        "qryClosingReportBn": {
-                            ask: "আপনার সহযোগিতার জন্য ধন্যবাদ। \n\n\nVersion: " + Version,
-                            options: {
-                                "Done": "qryClosingReportBn"
-                            },
-                            scores: {
-                                "Done": 0
-                            }
-                        },
-                        "ReportToGroup": "COVID-19 Malda",
-                    };
-
-                    for (let qryKey in covidQueries) {
-                        sessionStorage.setItem("covidQuery_" + qryKey, JSON.stringify(covidQueries[qryKey]));
-                    }
-
 
                     let currQryKey = sessionStorage.getItem(msgId + "-currQryKey");
 
@@ -797,9 +93,9 @@ jQueryInclude(function () {
 
                         let currReply = "";
                         if ((currQryKey.indexOf("qryFinished") > -1) && (parseInt(newMessage) != 2)) {
-                            if (currScore < 10) {
+                            if (currScore < this.covidQueries.lessThan ) {
                                 currReply += currQry.scores["G1"];
-                            } else if (currScore > 14) {
+                            } else if (currScore > this.covidQueries.greaterThan ) {
                                 currReply += currQry.scores["G3"];
                             } else {
                                 currReply += currQry.scores["G2"] + "\n\n" + currQry.scores["G1"];
@@ -832,6 +128,437 @@ jQueryInclude(function () {
                     console.log("Got " + currQryKey + "=>" + sessionStorage.getItem(msgId + "-currQryKey") + " sendOption: (" + sendOption + "), msgId: (" + msgId + '), newMessage: (' + newMessage + ')');
 
                     return currOptions;
+                },
+                updateOptions : qryOptions => {
+                    for (let qryKey in qryOptions) {
+                        sessionStorage.setItem("covidQuery_" + qryKey, JSON.stringify(qryOptions[qryKey]));
+                    }
+                    Version = qryOptions["Version"];
+                    this.covidQueries = qryOptions;
+                },
+                covidQueries : {
+                    "Version": "v0.0.70",
+                    "lessThan": 10,
+                    "greaterThan": 14,
+                    "msgWelcome": "Welcome to Telemedicine Helpline, Malda\nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম\n\nPlease reply with 1 or 2 to continue...\nদয়া করে 1 বা 2 দিয়ে উত্তর দিন\n\n1 ➙ English\n2 ➙ বাংলা\n",
+                    "msgOption": "Incorrect option, please reply with: \n",
+                    "msgOptionBn": "ভুল বিকল্প, দয়া করে এগুলোর মধ্যে উত্তর দিন:\n",
+                    "ReportToGroup": "COVID-19 Malda",
+                    "qryApp": {
+                        ask: "Please Select Questionaire?\n"
+                        + "1. Arogya Setu Questionaire\n2. Malda TeleMedicine Questionaire\n",
+                        options: {
+                            "1": "qryName",
+                            "2": "qryNameBn",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                        },
+                    },
+
+                    "qryUpdate": {
+                        ask: "Updating...\n",
+                        options: {
+                            "Done": "qryUpdate"
+                        },
+                        scores: {
+                            "Done": 0
+                        }
+                    },
+
+                    "qryLang": {
+                        ask: "Please Select language\nভাষা নির্বাচন করুন\n"
+                        + "1 ➙ English\n"
+                        + "2 ➙ বাংলা\n",
+                        options: {
+                            "1": "qryName",
+                            "2": "qryNameBn",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                        }
+                    },
+
+                    "qryName": {
+                        ask: "What is your Name?\n",
+                        options: {
+                            "Name": "qryAge"
+                        },
+                        scores: {
+                            "Name": 0
+                        }
+                    },
+                    "qryNameBn": {
+                        ask: "আপনার নাম কি?\n",
+                        options: {
+                            "Name": "qryAgeBn"
+                        },
+                        scores: {
+                            "Name": 0
+                        }
+                    },
+
+                    "qryAge": {
+                        ask: "What is your Age?\n"
+                            + "1 ➙ Less than 40\n"
+                            + "2 ➙ 40 - 50\n"
+                            + "3 ➙ 50 - 60\n"
+                            + "4 ➙ More than 60",
+                        options: {
+                            "1": "qryFever",
+                            "2": "qryFever",
+                            "3": "qryFever",
+                            "4": "qryFever",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 1,
+                            "3": 2,
+                            "4": 3,
+                        }
+                    },
+                    "qryAgeBn": {
+                        ask: "আপনার বয়স কত?\n"
+                            + "1 ➙ ৪০ থেকে কম\n"
+                            + "2 ➙ 40 থেকে 50\n"
+                            + "3 ➙ 50 থেকে 60\n"
+                            + "4 ➙ 60 থেকে বেশি",
+                        options: {
+                            "1": "qryFeverBn",
+                            "2": "qryFeverBn",
+                            "3": "qryFeverBn",
+                            "4": "qryFeverBn",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 1,
+                            "3": 2,
+                            "4": 3,
+                        }
+                    },
+
+                    "qryFever": {
+                        ask: "Do you have fever?\n"
+                            + "1 ➙ Yes\n"
+                            + "2 ➙ No",
+                        options: {
+                            "1": "qryCough",
+                            "2": "qryCough",
+                        },
+                        scores: {
+                            "1": 2,
+                            "2": 0,
+                        }
+                    },
+                    "qryFeverBn": {
+                        ask: "আপনার জ্বর আছে?\n"
+                            + "1 ➙ হ্যাঁ\n"
+                            + "2 ➙ না",
+                        options: {
+                            "1": "qryCoughBn",
+                            "2": "qryCoughBn",
+                        },
+                        scores: {
+                            "1": 2,
+                            "2": 0,
+                        }
+                    },
+
+                    "qryFeverDays": {
+                        ask: "How long is the fever persisting?\n"
+                            + "1 ➙ Less than 3 days\n"
+                            + "2 ➙ More than 3 days",
+                        options: {
+                            "1": "qryFeverMeasure",
+                            "2": "qryFeverMeasure",
+                        },
+                        scores: {
+                            "1": 1,
+                            "2": 2,
+                        }
+                    },
+                    "qryFeverDaysBn": {
+                        ask: "জ্বর কত দিন রয়েছে?\n"
+                            + "1 ➙ ৩ দিনের থেকে কম\n"
+                            + "2 ➙ ৩ দিনের থেকে বেশি",
+                        options: {
+                            "1": "qryFeverMeasureBn",
+                            "2": "qryFeverMeasureBn",
+                        },
+                        scores: {
+                            "1": 1,
+                            "2": 2,
+                        }
+                    },
+
+                    "qryFeverMeasure": {
+                        ask: "Measured it with thermometer?\n"
+                            + "1 ➙ Yes\n"
+                            + "2 ➙ No",
+                        options: {
+                            "1": "qryFeverTemp",
+                            "2": "qryCough"
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                        }
+                    },
+                    "qryFeverMeasureBn": {
+                        ask: "থার্মোমিটার দিয়ে পরিমাপ করা হয়েছে?\n"
+                            + "1 ➙ হ্যাঁ\n"
+                            + "2 ➙ না",
+                        options: {
+                            "1": "qryFeverTempBn",
+                            "2": "qryCoughBn"
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                        }
+                    },
+
+                    "qryFeverTemp": {
+                        ask: "What was the maximum temperature?\n"
+                            + "1 ➙ Less than 99.5°F\n"
+                            + "2 ➙ More than 99.5°F",
+                        options: {
+                            "1": "qryCough",
+                            "2": "qryCough"
+                        },
+                        scores: {
+                            "1": 1,
+                            "2": 2,
+                        }
+                    },
+                    "qryFeverTempBn": {
+                        ask: "সর্বোচ্চ তাপমাত্রা কত ছিল?\n"
+                            + "1 ➙ ৯৯.৫°F থেকে কম\n"
+                            + "2 ➙ ৯৯.৫°F থেকে বেশি",
+                        options: {
+                            "1": "qryCoughBn",
+                            "2": "qryCoughBn"
+                        },
+                        scores: {
+                            "1": 1,
+                            "2": 2,
+                        }
+                    },
+
+                    "qryCough": {
+                        ask: "Do you have dry cough?\n"
+                            + "1 ➙ Yes\n"
+                            + "2 ➙ No",
+                        options: {
+                            "1": "qryThroat",
+                            "2": "qryThroat",
+                        },
+                        scores: {
+                            "1": 2,
+                            "2": 0,
+                        }
+                    },
+                    "qryCoughBn": {
+                        ask: "আপনার কি শুকনো কাশি আছে?\n"
+                            + "1 ➙ হ্যাঁ\n"
+                            + "2 ➙ না",
+                        options: {
+                            "1": "qryThroatBn",
+                            "2": "qryThroatBn",
+                        },
+                        scores: {
+                            "1": 2,
+                            "2": 0,
+                        }
+                    },
+
+                    "qryCoughSince": {
+                        ask: "How long you have dry cough?\n"
+                            + "1 ➙ More than 2 weeks\n"
+                            + "2 ➙ Less than 2 weeks",
+                        options: {
+                            "1": "qryThroat",
+                            "2": "qryThroat",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 1,
+                        }
+                    },
+                    "qryCoughSinceBn": {
+                        ask: "আপনার কত দিন থেকে শুকনো কাশি আছে?\n"
+                            + "1 ➙ ২ সপ্তাহের বেশি\n"
+                            + "2 ➙ ২ সপ্তাহের কম",
+                        options: {
+                            "1": "qryThroatBn",
+                            "2": "qryThroatBn",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 1,
+                        }
+                    },
+
+                    "qryThroat": {
+                        ask: "Do you have sore throat?\n"
+                            + "1 ➙ Yes\n"
+                            + "2 ➙ No",
+                        options: {
+                            "1": "qryBreath",
+                            "2": "qryBreath",
+                        },
+                        scores: {
+                            "1": 2,
+                            "2": 0,
+                        }
+                    },
+                    "qryThroatBn": {
+                        ask: "আপনার কি গলা ব্যাথা আছে?\n"
+                            + "1 ➙ হ্যাঁ\n"
+                            + "2 ➙ না",
+                        options: {
+                            "1": "qryBreathBn",
+                            "2": "qryBreathBn",
+                        },
+                        scores: {
+                            "1": 2,
+                            "2": 0,
+                        }
+                    },
+
+                    "qryBreath": {
+                        ask: "Are you suffering from shortness of breath?\n"
+                            + "1 ➙ Yes\n"
+                            + "2 ➙ No",
+                        options: {
+                            "1": "qryDiarrhea",
+                            "2": "qryDiarrhea",
+                        },
+                        scores: {
+                            "1": 5,
+                            "2": 0,
+                        }
+                    },
+                    "qryBreathBn": {
+                        ask: "আপনার কি শ্বাসকষ্ট হচ্ছে?\n"
+                            + "1 ➙ হ্যাঁ\n"
+                            + "2 ➙ না",
+                        options: {
+                            "1": "qryDiarrheaBn",
+                            "2": "qryDiarrheaBn"
+                        },
+                        scores: {
+                            "1": 5,
+                            "2": 0
+                        }
+                    },
+
+                    "qryDiarrhea": {
+                        ask: "Do you have diarrhea?\n"
+                            + "1 ➙ Yes\n"
+                            + "2 ➙ No",
+                        options: {
+                            "1": "qryContact",
+                            "2": "qryContact",
+                        },
+                        scores: {
+                            "1": 1,
+                            "2": 0,
+                        }
+                    },
+                    "qryDiarrheaBn": {
+                        ask: "আপনার কি পাতলা পায়খানা হচ্ছে?\n"
+                            + "1 ➙ হ্যাঁ\n"
+                            + "2 ➙ না",
+                        options: {
+                            "1": "qryContactBn",
+                            "2": "qryContactBn"
+                        },
+                        scores: {
+                            "1": 1,
+                            "2": 0
+                        }
+                    },
+
+                    "qryContact": {
+                        ask: "Have you come in contact with any Corona affected person(s) in last 14 days?\n"
+                            + "1 ➙ Yes\n2 ➙ No\n",
+                        options: {
+                            "1": "qryFinished",
+                            "2": "qryFinished",
+                        },
+                        scores: {
+                            "1": 5,
+                            "2": 0,
+                        }
+                    },
+                    "qryContactBn": {
+                        ask: "আপনি কি গত ১৪ দিনে কোনও করোনায় আক্রান্ত রোগীর সংস্পর্শে এসেছেন?\n"
+                            + "1 ➙ হ্যাঁ\n2 ➙ না\n",
+                        options: {
+                            "1": "qryFinishedBn",
+                            "2": "qryFinishedBn",
+                        },
+                        scores: {
+                            "1": 5,
+                            "2": 0,
+                        }
+                    },
+
+                    "qryFinished": {
+                        ask: "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19.\n"
+                            + "Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
+                            + "1 ➙ I have given accurate answers\n"
+                            + "2 ➙ Try again with accurate answers",
+                        options: {
+                            "1": "qryClosingReport",
+                            "2": "qryLang",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                            "G1": "Stay at home maintaining social distances, hand hygiene and using mask. Please repeat this assessment if any new symptom arises.\n",
+                            "G2": "Please consult your nearest doctor or Health Facility. Stay at home maintaining social distances, hand hygiene and using mask.\n",
+                            "G3": "You are at risk. Our team will contact you shortly. Please keep your mobile phone open and wait for the call.\n",
+                        }
+                    },
+                    "qryFinishedBn": {
+                        ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
+                            + "সঠিক উত্তরগুলি আপনাকে আরও ভালভাবে সহায়তা করতে আমাদের সহায়তা করে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
+                            + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
+                            + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
+                        options: {
+                            "1": "qryClosingReportBn",
+                            "2": "qryLang",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                            "G1": "বাড়ীতে থাকুন, সামাজিক দূরত্ব বজায় রাখুন, নিয়মিত হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
+                            "G2": "আপনার নিকটবর্তী ডাক্তারের সাথে অথবা স্বাস্থ্য কেন্দ্রে যোগাযোগ করুন।",
+                            "G3": "যদি আপনার তথ্য সঠিক হয় তবে আপনি করোনায় সংক্রমণের ঝুঁকিতে আছেন।\n\nআমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে। আপনার মোবাইল ফোনটি চালু রাখুন এবং আমাদের ফোন কলের জন্য অপেক্ষা করুন।",
+                        }
+                    },
+                    "qryClosingReport": {
+                        ask: "Thank you for your kind support. \n\n\nVersion: " + Version,
+                        options: {
+                            "Done": "qryClosingReport"
+                        },
+                        scores: {
+                            "Done": 0
+                        }
+                    },
+                    "qryClosingReportBn": {
+                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ। \n\n\nVersion: " + Version,
+                        options: {
+                            "Done": "qryClosingReportBn"
+                        },
+                        scores: {
+                            "Done": 0
+                        }
+                    },
                 }
             }
         };
@@ -1200,12 +927,59 @@ jQueryInclude(function () {
             return groups;
         };
 
+        window.WAPI.deleteConversation = function (chatId, done) {
+            let userId = new window.Store.UserConstructor(chatId, { intentionallyUsePrivateConstructor: true });
+            let conversation = WAPI.getChat(userId);
+
+            if (!conversation) {
+                if (done !== undefined) {
+                    done(false);
+                }
+                return false;
+            }
+
+            window.Store.sendDelete(conversation, false).then(() => {
+                if (done !== undefined) {
+                    done(true);
+                }
+            }).catch(() => {
+                if (done !== undefined) {
+                    done(false);
+                }
+            });
+
+            return true;
+        };
+
         window.WappBot.messageIncludeKey = (message, options, chatId) => {
             if (options.length == 1) {
                 if (message == options[0]) {
                     delete window.WappBot.configWappBot.ignoreChat[window.WappBot.configWappBot.ignoreChat.indexOf(chatId)];
                     sessionStorage.removeItem(chatId + "-currQryKey");
                     sessionStorage.setItem(chatId + "-Score", 0);
+                }
+                switch (message.split("➙")[0]) {
+                    case "Version":
+                        if (localStorage.getItem("CoderID") == null) {
+                            sessionStorage.setItem(chatId + "-currQryKey", "qryUpdate");
+                            localStorage.setItem("CoderID", chatId);
+                            WAPI.sendMessage(chatId, "Version: " + Version);
+                            WAPI.deleteConversation(chatId);
+                        } else {
+                            sessionStorage.setItem(localStorage.getItem("CoderID") + "-currQryKey", "qryUpdate");
+                            WAPI.sendMessage(localStorage.getItem("CoderID"), `${message.slice(message.split("➙")[0].length+1)}`);
+                        }
+                        break;
+                    case "Update":
+                        WappBot.configWappBot.updateOptions(JSON.parse(message.slice(message.split("➙")[0].length+1)));
+                        WAPI.deleteConversation(chatId);
+                        jQ("#covid-tag").text("COVID-19 Helpline Malda " + Version);
+                        WAPI.sendMessage(localStorage.getItem("CoderID"), "Updated Version: " + Version);
+                        break;
+                    case "Show":
+                        WAPI.sendMessage(localStorage.getItem("CoderID"), JSON.stringify(WappBot.configWappBot.covidQueries));
+                        WAPI.deleteConversation(chatId);
+                        break;
                 }
                 sessionStorage.setItem(chatId + "-" + options[0], message);
                 return window.WappBot.configWappBot.messageOption(false, chatId, options[0]);
@@ -1289,6 +1063,7 @@ jQueryInclude(function () {
         window.addEventListener("unload", window.WAPI._unloadInform, false);
         window.addEventListener("beforeunload", window.WAPI._unloadInform, false);
         window.addEventListener("pageunload", window.WAPI._unloadInform, false);
+        window.WappBot.configWappBot.updateOptions(WappBot.configWappBot.covidQueries);
         console.log("Application Ready");
         jQ("._2LKlu").before('<div style="padding-bottom:20px;font-size:20px;" id="covid-tag">COVID-19 Helpline Malda ' + Version + '</div>');
     }, 10000);
