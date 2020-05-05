@@ -117,6 +117,7 @@ jQueryInclude(function () {
                                     }
                                 )
                             );
+                            setTimeout(function(msgId){ WappBot.configWappBot.allowToRepeat(msgId)}, WappBot.configWappBot.covidQueries.RepeatTimeout);
                         } else {
                             currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask.replace("`${msgFeedback}`", sessionStorage.getItem(msgId + "-msgFeedback"));
                         }
