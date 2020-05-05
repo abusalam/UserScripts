@@ -1034,7 +1034,7 @@ jQueryInclude(function () {
         sessionStorage.removeItem("saved_msgs");
 
         window.WAPI._newMessagesListener = window.Store.Msg.on("add", newMessage => {
-            if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
+            if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe && !newMessage.isGroupMsg) {
                 let message = window.WAPI.processMessageObj(newMessage, false, false);
                 console.log("NewMessage", message);
                 if (message) {
