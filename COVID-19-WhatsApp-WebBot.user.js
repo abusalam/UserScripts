@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.70
+// @version      0.0.71
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "";'
+            + 'var Version = "0.0.71";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -137,7 +137,7 @@ jQueryInclude(function () {
                     this.covidQueries = qryOptions;
                 },
                 covidQueries : {
-                    "Version": "v0.0.70",
+                    "Version": "v0.0.71",
                     "lessThan": 10,
                     "greaterThan": 14,
                     "msgWelcome": "Welcome to Telemedicine Helpline, Malda\nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম\n\nPlease reply with 1 or 2 to continue...\nদয়া করে 1 বা 2 দিয়ে উত্তর দিন\n\n1 ➙ English\n2 ➙ বাংলা\n",
@@ -985,7 +985,7 @@ jQueryInclude(function () {
                 return window.WappBot.configWappBot.messageOption(false, chatId, options[0]);
             }
             for (let i = 0; i < options.length; i++) {
-                if (message.toUpperCase().includes(options[i].toUpperCase()))
+                if (message==options[i])
                     return window.WappBot.configWappBot.messageOption(false, chatId, message);
             }
             return false;
