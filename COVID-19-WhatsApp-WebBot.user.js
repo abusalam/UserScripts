@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.71
+// @version      0.0.73
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "0.0.71";'
+            + 'var Version = "v0.0.73";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -37,26 +37,25 @@ jQueryInclude(function () {
                 ignoreChat: [],
                 messageInitial: (chatId) => {
                     return {
-                        text: this.covidQueries.msgWelcome,
+                        text: WappBot.configWappBot.covidQueries.msgWelcome,
                         image: null //"https://pmrpressrelease.com/wp-content/uploads/2019/05/Telehealth-1.jpg"
                     };
                 },
                 messageIncorrect: (chatId) => {
                     if (sessionStorage.getItem(chatId + "-currQryKey").indexOf("Bn") > -1) {
                         return {
-                            text: this.covidQueries.msgOptionBn
+                            text: WappBot.configWappBot.covidQueries.msgOptionBn
                         };
                     } else if (sessionStorage.getItem(chatId + "-currQryKey") != "qryApp") {
                         return {
-                            text: this.covidQueries.msgOptionBn
+                            text: WappBot.configWappBot.covidQueries.msgOptionBn
                         };
                     } else {
                         return {
-                            text: this.covidQueries.msgOption + this.covidQueries.msgOptionBn
+                            text: WappBot.configWappBot.covidQueries.msgOption + WappBot.configWappBot.covidQueries.msgOptionBn
                         };
                     }
                 },
-
                 messageOption: (sendOption, msgId, newMessage) => {
 
                     let currQryKey = sessionStorage.getItem(msgId + "-currQryKey");
@@ -93,18 +92,20 @@ jQueryInclude(function () {
 
                         let currReply = "";
                         if ((currQryKey.indexOf("qryFinished") > -1) && (parseInt(newMessage) != 2)) {
-                            if (currScore < this.covidQueries.lessThan ) {
+                            if (currScore < WappBot.configWappBot.covidQueries.lessThan) {
                                 currReply += currQry.scores["G1"];
-                            } else if (currScore > this.covidQueries.greaterThan ) {
+                            } else if (currScore > WappBot.configWappBot.covidQueries.greaterThan) {
                                 currReply += currQry.scores["G3"];
                             } else {
                                 currReply += currQry.scores["G2"] + "\n\n" + currQry.scores["G1"];
                             }
+                            let msgFeedback = sessionStorage.getItem(msgId + "-msgFeedback");
+                            msgFeedback = !msgFeedback ? "\n\n*Message:* _" + msgFeedback + "_" : "";
                             WAPI.sendMessage(
                                 WAPI.getAllGroups().find(
                                     (group) => (group.__x_name == sessionStorage.getItem("covidQuery_ReportToGroup").slice(1, -1))
                                 ).__x_id._serialized, "*Name:* " + sessionStorage.getItem(msgId + "-Name")
-                                + "\n*Mobile No:* " + msgId.slice(2, -5) + "\n*Score:* " + currScore + "\n*Advice:* " + currReply
+                                + "\n*Mobile No:* " + msgId.slice(2, -5) + msgFeedback + "\n\nScore: " + currScore + "\nAdvice: " + currReply
                             );
                             localStorage.setItem(
                                 "scoreReport_" + msgId.slice(2, -5),
@@ -117,7 +118,7 @@ jQueryInclude(function () {
                                 )
                             );
                         } else {
-                            currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask;
+                            currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask.replace("`${msgFeedback}`", sessionStorage.getItem(msgId + "-msgFeedback"));
                         }
                         currOptions = {
                             text: currReply,
@@ -129,24 +130,32 @@ jQueryInclude(function () {
 
                     return currOptions;
                 },
-                updateOptions : qryOptions => {
+                updateOptions: qryOptions => {
                     for (let qryKey in qryOptions) {
                         sessionStorage.setItem("covidQuery_" + qryKey, JSON.stringify(qryOptions[qryKey]));
                     }
                     Version = qryOptions["Version"];
-                    this.covidQueries = qryOptions;
+                    WappBot.configWappBot.covidQueries = qryOptions;
+                    jQ("#covid-tag").text("COVID-19 Helpline Malda " + Version);
                 },
-                covidQueries : {
-                    "Version": "v0.0.71",
+                allowToRepeat: chatId => {
+                    delete WappBot.configWappBot.ignoreChat[WappBot.configWappBot.ignoreChat.indexOf(chatId)];
+                    sessionStorage.removeItem(chatId + "-currQryKey");
+                    sessionStorage.removeItem(chatId + "-msgFeedback");
+                    sessionStorage.setItem(chatId + "-Score", 0);
+                },
+                covidQueries: {
+                    "Version": "v0.0.73",
                     "lessThan": 10,
                     "greaterThan": 14,
                     "msgWelcome": "Welcome to Telemedicine Helpline, Malda\nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম\n\nPlease reply with 1 or 2 to continue...\nদয়া করে 1 বা 2 দিয়ে উত্তর দিন\n\n1 ➙ English\n2 ➙ বাংলা\n",
                     "msgOption": "Incorrect option, please reply with: \n",
                     "msgOptionBn": "ভুল বিকল্প, দয়া করে এগুলোর মধ্যে উত্তর দিন:\n",
                     "ReportToGroup": "COVID-19 Malda",
+                    "RepeatTimeout": 60000,
                     "qryApp": {
                         ask: "Please Select Questionaire?\n"
-                        + "1. Arogya Setu Questionaire\n2. Malda TeleMedicine Questionaire\n",
+                            + "1. Arogya Setu Questionaire\n2. Malda TeleMedicine Questionaire\n",
                         options: {
                             "1": "qryName",
                             "2": "qryNameBn",
@@ -158,7 +167,7 @@ jQueryInclude(function () {
                     },
 
                     "qryUpdate": {
-                        ask: "Updating...\n",
+                        ask: "Done\n",
                         options: {
                             "Done": "qryUpdate"
                         },
@@ -169,8 +178,8 @@ jQueryInclude(function () {
 
                     "qryLang": {
                         ask: "Please Select language\nভাষা নির্বাচন করুন\n"
-                        + "1 ➙ English\n"
-                        + "2 ➙ বাংলা\n",
+                            + "1 ➙ English\n"
+                            + "2 ➙ বাংলা\n",
                         options: {
                             "1": "qryName",
                             "2": "qryNameBn",
@@ -541,22 +550,121 @@ jQueryInclude(function () {
                             "G3": "যদি আপনার তথ্য সঠিক হয় তবে আপনি করোনায় সংক্রমণের ঝুঁকিতে আছেন।\n\nআমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে। আপনার মোবাইল ফোনটি চালু রাখুন এবং আমাদের ফোন কলের জন্য অপেক্ষা করুন।",
                         }
                     },
+
                     "qryClosingReport": {
-                        ask: "Thank you for your kind support. \n\n\nVersion: " + Version,
+                        ask: "Thank you for your kind support.\n\n\nVersion: " + Version,
                         options: {
-                            "Done": "qryClosingReport"
+                            "qryNext": "qryClosingFeedback"
                         },
                         scores: {
-                            "Done": 0
+                            "qryNext": 0
                         }
                     },
                     "qryClosingReportBn": {
-                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ। \n\n\nVersion: " + Version,
+                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ।\n\n\nVersion: " + Version,
                         options: {
-                            "Done": "qryClosingReportBn"
+                            "qryNext": "qryClosingFeedbackBn"
                         },
                         scores: {
-                            "Done": 0
+                            "qryNext": 0
+                        }
+                    },
+
+                    "qryClosingFeedback": {
+                        ask: "Do you have something to say?\n\n"
+                            + "1 ➙ Yes\n2 ➙ No\n",
+                        options: {
+                            "1": "qryFeedback",
+                            "2": "qryClosingReport",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                        }
+                    },
+                    "qryClosingFeedbackBn": {
+                        ask: "আপনি কি কিছু বলতে চান?\n\n"
+                            + "1 ➙ হ্যাঁ\n2 ➙ না\n",
+                        options: {
+                            "1": "qryFeedbackBn",
+                            "2": "qryClosingReportBn",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                        }
+                    },
+
+                    "qryFeedback": {
+                        ask: "Please type your message:",
+                        options: {
+                            "msgFeedback": "qryFinishedFeedback"
+                        },
+                        scores: {
+                            "msgFeedback": 0,
+                        }
+                    },
+                    "qryFeedbackBn": {
+                        ask: "আপনার বার্তা টাইপ করুন:",
+                        options: {
+                            "msgFeedback": "qryFinishedFeedbackBn"
+                        },
+                        scores: {
+                            "msgFeedback": 0,
+                        }
+                    },
+
+                    "qryFinishedFeedback": {
+                        ask: "Please verify your message below, is that ok?\n\n"
+                            + "_`${msgFeedback}`_\n\n"
+                            + "1 ➙ I have verified the message and it's ok\n"
+                            + "2 ➙ I need to change the message",
+                        options: {
+                            "1": "qryClosed",
+                            "2": "qryFeedback",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                            "G1": "Stay at home maintaining social distances, hand hygiene and using mask. Please repeat this assessment if any new symptom arises.\n",
+                            "G2": "Please consult your nearest doctor or Health Facility. Stay at home maintaining social distances, hand hygiene and using mask.\n",
+                            "G3": "You are at risk. Our team will contact you shortly. Please keep your mobile phone open and wait for the call.\n",
+                        }
+                    },
+                    "qryFinishedFeedbackBn": {
+                        ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
+                            + "সঠিক উত্তরগুলি আপনাকে আরও ভালভাবে সহায়তা করতে আমাদের সহায়তা করে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
+                            + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
+                            + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
+                        options: {
+                            "1": "qryClosedBn",
+                            "2": "qryFeedbackBn",
+                        },
+                        scores: {
+                            "1": 0,
+                            "2": 0,
+                            "G1": "বাড়ীতে থাকুন, সামাজিক দূরত্ব বজায় রাখুন, নিয়মিত হাত পরিষ্কার রাখুন এবং মাস্ক ব্যবহার করুন। কোনও নতুন লক্ষণ দেখা দিলে দয়া করে এই মূল্যায়নটি পুনরাবৃত্তি করুন।",
+                            "G2": "আপনার নিকটবর্তী ডাক্তারের সাথে অথবা স্বাস্থ্য কেন্দ্রে যোগাযোগ করুন।",
+                            "G3": "যদি আপনার তথ্য সঠিক হয় তবে আপনি করোনায় সংক্রমণের ঝুঁকিতে আছেন।\n\nআমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে। আপনার মোবাইল ফোনটি চালু রাখুন এবং আমাদের ফোন কলের জন্য অপেক্ষা করুন।",
+                        }
+                    },
+
+                    "qryClosed": {
+                        ask: "Thank you for your kind support.\n\nYou can repeat this assesment again tomorrow.",
+                        options: {
+                            "qryApp": "qryClosed"
+                        },
+                        scores: {
+                            "qryApp": 0
+                        }
+                    },
+                    "qryClosedBn": {
+                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ।\n\nআপনি আগামীকাল আবার এই মূল্যায়নটি পুনরাবৃত্তি করতে পারবেন।",
+                        options: {
+                            "qryApp": "qryClosedBn"
+                        },
+                        scores: {
+                            "qryApp": 0
                         }
                     },
                 }
@@ -954,12 +1062,16 @@ jQueryInclude(function () {
         window.WappBot.messageIncludeKey = (message, options, chatId) => {
             if (options.length == 1) {
                 if (message == options[0]) {
-                    delete window.WappBot.configWappBot.ignoreChat[window.WappBot.configWappBot.ignoreChat.indexOf(chatId)];
-                    sessionStorage.removeItem(chatId + "-currQryKey");
-                    sessionStorage.setItem(chatId + "-Score", 0);
+                    WappBot.configWappBot.allowToRepeat(chatId);
                 }
+
+                // TODO: Implement Delete Chat
+                // TODO: Implement Reply Chat
+                // TODO: Implement Skip to Question
+                // TODO: Show symptoms in report
+
                 switch (message.split("➙")[0]) {
-                    case "Version":
+                    case "DoShow":
                         if (localStorage.getItem("CoderID") == null) {
                             sessionStorage.setItem(chatId + "-currQryKey", "qryUpdate");
                             localStorage.setItem("CoderID", chatId);
@@ -967,17 +1079,23 @@ jQueryInclude(function () {
                             WAPI.deleteConversation(chatId);
                         } else {
                             sessionStorage.setItem(localStorage.getItem("CoderID") + "-currQryKey", "qryUpdate");
-                            WAPI.sendMessage(localStorage.getItem("CoderID"), `${message.slice(message.split("➙")[0].length+1)}`);
+                            WAPI.sendMessage(localStorage.getItem("CoderID"), eval(message.slice(message.split("➙")[0].length + 1)));
                         }
                         break;
                     case "Update":
-                        WappBot.configWappBot.updateOptions(JSON.parse(message.slice(message.split("➙")[0].length+1)));
+                        WappBot.configWappBot.updateOptions(JSON.parse(message.slice(message.split("➙")[0].length + 1)));
                         WAPI.deleteConversation(chatId);
-                        jQ("#covid-tag").text("COVID-19 Helpline Malda " + Version);
                         WAPI.sendMessage(localStorage.getItem("CoderID"), "Updated Version: " + Version);
                         break;
-                    case "Show":
+                    case "ShowQry":
                         WAPI.sendMessage(localStorage.getItem("CoderID"), JSON.stringify(WappBot.configWappBot.covidQueries));
+                        WAPI.deleteConversation(chatId);
+                        break;
+                    case "SkipTo":
+                        sessionStorage.setItem(
+                            localStorage.getItem("CoderID") + "-currQryKey",
+                            message.slice(message.split("➙")[0].length + 1)
+                        );
                         WAPI.deleteConversation(chatId);
                         break;
                 }
@@ -985,7 +1103,7 @@ jQueryInclude(function () {
                 return window.WappBot.configWappBot.messageOption(false, chatId, options[0]);
             }
             for (let i = 0; i < options.length; i++) {
-                if (message==options[i])
+                if (message == options[i])
                     return window.WappBot.configWappBot.messageOption(false, chatId, message);
             }
             return false;
