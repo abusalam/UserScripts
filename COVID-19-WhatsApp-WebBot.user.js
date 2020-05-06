@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         COVID-19-WhatsApp-Web-Bot
 // @namespace    https://github.com/abusalam
-// @version      0.0.73
+// @version      0.0.75
 // @description  Send Automated Reply for COVID-19 Self Assesment
 // @author       Abu Salam Parvez Alam
 // @match        https://web.whatsapp.com/
@@ -19,7 +19,7 @@ function jQueryInclude(callback) {
         var UserScript = document.createElement('script');
         UserScript.textContent = 'window.jQ=jQuery.noConflict(true);'
             + 'var BaseURL = "https://www.malda.gov.in/";'
-            + 'var Version = "v0.0.73";'
+            + 'var Version = "v0.0.75";'
             + '(' + callback.toString() + ')();';
         document.body.appendChild(UserScript);
     }, false);
@@ -85,22 +85,25 @@ jQueryInclude(function () {
                             currScore = parseInt(currQry.scores[newMessage]) + parseInt(currScore);
                             if (nextQryKey == "qryLang") currScore = 0;
                             sessionStorage.setItem(msgId + "-Score", currScore);
-                            //console.log({ "131-currQry-new-score": currQry.scores[newMessage] });
                             // End of Update Score for currentAnswer
                         }
-                        console.log("Asking:" + JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask);
 
-                        let currReply = "";
+                        let currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask;
+                        console.log("Asking-" + currQryKey + ": " + currReply);
                         if ((currQryKey.indexOf("qryFinished") > -1) && (parseInt(newMessage) != 2)) {
                             if (currScore < WappBot.configWappBot.covidQueries.lessThan) {
-                                currReply += currQry.scores["G1"];
+                                currReply = currQry.scores["G1"];
                             } else if (currScore > WappBot.configWappBot.covidQueries.greaterThan) {
-                                currReply += currQry.scores["G3"];
+                                currReply = currQry.scores["G3"];
                             } else {
-                                currReply += currQry.scores["G2"] + "\n\n" + currQry.scores["G1"];
+                                currReply = currQry.scores["G2"] + "\n\n" + currQry.scores["G1"];
                             }
                             let msgFeedback = sessionStorage.getItem(msgId + "-msgFeedback");
-                            msgFeedback = !msgFeedback ? "\n\n*Message:* _" + msgFeedback + "_" : "";
+                            if (msgFeedback == null) {
+                                msgFeedback = "";
+                            } else {
+                                msgFeedback = "\n\n*Message:* _" + msgFeedback + "_";
+                            }
                             WAPI.sendMessage(
                                 WAPI.getAllGroups().find(
                                     (group) => (group.__x_name == sessionStorage.getItem("covidQuery_ReportToGroup").slice(1, -1))
@@ -113,15 +116,19 @@ jQueryInclude(function () {
                                     {
                                         Name: sessionStorage.getItem(msgId + "-Name"),
                                         Score: currScore,
+                                        Message: sessionStorage.getItem(msgId + "-msgFeedback"),
                                         Timestamp: Date.now(),
                                     }
                                 )
                             );
-                            setTimeout(function(msgId){ WappBot.configWappBot.allowToRepeat(msgId)}, WappBot.configWappBot.covidQueries.RepeatTimeout);
-                        } else {
-                            currReply = JSON.parse(sessionStorage.getItem("covidQuery_" + currQry.options[newMessage])).ask.replace("`${msgFeedback}`", sessionStorage.getItem(msgId + "-msgFeedback"));
+                            // TODO: Set timeout for retake
+                            setTimeout(function (msgId) {
+                                WappBot.configWappBot.allowToRepeat(msgId);
+                            }, WappBot.configWappBot.covidQueries.RepeatTimeout, msgId);
                         }
-                        currOptions = {
+                        currReply = currReply.replace(/{{msgFeedback}}/g, sessionStorage.getItem(msgId + "-msgFeedback"));
+                        currReply = currReply.replace(/{{Version}}/g, Version);
+                        currOptions = { // TODO: Process Templates
                             text: currReply,
                             image: null
                         };
@@ -135,25 +142,31 @@ jQueryInclude(function () {
                     for (let qryKey in qryOptions) {
                         sessionStorage.setItem("covidQuery_" + qryKey, JSON.stringify(qryOptions[qryKey]));
                     }
-                    Version = qryOptions["Version"];
+
+                    Version = WappBot.configWappBot.expandTemplate(qryOptions["Version"]);
                     WappBot.configWappBot.covidQueries = qryOptions;
-                    jQ("#covid-tag").text("COVID-19 Helpline Malda " + Version);
                 },
                 allowToRepeat: chatId => {
                     delete WappBot.configWappBot.ignoreChat[WappBot.configWappBot.ignoreChat.indexOf(chatId)];
                     sessionStorage.removeItem(chatId + "-currQryKey");
                     sessionStorage.removeItem(chatId + "-msgFeedback");
                     sessionStorage.setItem(chatId + "-Score", 0);
+                    console.log("Allowed: " + chatId)
+                },
+                expandTemplate: (txtTemplate, dataValues) => {
+                    return txtTemplate.replace("{{Version}}", Version);
+                    // TODO: Make templating Dynamic
+                    // TODO: Test the Templates
                 },
                 covidQueries: {
-                    "Version": "v0.0.73",
-                    "lessThan": 10,
-                    "greaterThan": 14,
+                    "Version": "{{Version}}",
                     "msgWelcome": "Welcome to Telemedicine Helpline, Malda\nমালদা টেলিমেডিসিন হেল্পলাইনে আপনাকে স্বাগতম\n\nPlease reply with 1 or 2 to continue...\nদয়া করে 1 বা 2 দিয়ে উত্তর দিন\n\n1 ➙ English\n2 ➙ বাংলা\n",
                     "msgOption": "Incorrect option, please reply with: \n",
                     "msgOptionBn": "ভুল বিকল্প, দয়া করে এগুলোর মধ্যে উত্তর দিন:\n",
+                    "lessThan": 10,
+                    "greaterThan": 14,
                     "ReportToGroup": "COVID-19 Malda",
-                    "RepeatTimeout": 60000,
+                    "RepeatTimeout": 36000000,
                     "qryApp": {
                         ask: "Please Select Questionaire?\n"
                             + "1. Arogya Setu Questionaire\n2. Malda TeleMedicine Questionaire\n",
@@ -553,7 +566,7 @@ jQueryInclude(function () {
                     },
 
                     "qryClosingReport": {
-                        ask: "Thank you for your kind support.\n\n\nVersion: " + Version,
+                        ask: "Thank you for your kind support.\n\n\nVersion: {{Version}}",
                         options: {
                             "qryNext": "qryClosingFeedback"
                         },
@@ -562,7 +575,7 @@ jQueryInclude(function () {
                         }
                     },
                     "qryClosingReportBn": {
-                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ।\n\n\nVersion: " + Version,
+                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ।\n\n\nVersion: {{Version}}",
                         options: {
                             "qryNext": "qryClosingFeedbackBn"
                         },
@@ -606,7 +619,7 @@ jQueryInclude(function () {
                         }
                     },
                     "qryFeedbackBn": {
-                        ask: "আপনার বার্তা টাইপ করুন:",
+                        ask: "আপনার মেসেজ টাইপ করুন:",
                         options: {
                             "msgFeedback": "qryFinishedFeedbackBn"
                         },
@@ -617,7 +630,7 @@ jQueryInclude(function () {
 
                     "qryFinishedFeedback": {
                         ask: "Please verify your message below, is that ok?\n\n"
-                            + "_`${msgFeedback}`_\n\n"
+                            + "*Message:* _{{msgFeedback}}_\n\n"
                             + "1 ➙ I have verified the message and it's ok\n"
                             + "2 ➙ I need to change the message",
                         options: {
@@ -633,10 +646,10 @@ jQueryInclude(function () {
                         }
                     },
                     "qryFinishedFeedbackBn": {
-                        ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
-                            + "সঠিক উত্তরগুলি আপনাকে আরও ভালভাবে সহায়তা করতে আমাদের সহায়তা করে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
-                            + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
-                            + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
+                        ask: "দয়া করে নীচে আপনার মেসেজ যাচাই করুন, এটি কি ঠিক আছে?\n\n"
+                            + "*Message:* _{{msgFeedback}}_\n\n"
+                            + "1 ➙ আমি মেসেজ যাচাই করেছি এবং ঠিক আছে\n"
+                            + "2 ➙ আমার মেসেজ বদলাতে হবে",
                         options: {
                             "1": "qryClosedBn",
                             "2": "qryFeedbackBn",
@@ -651,7 +664,7 @@ jQueryInclude(function () {
                     },
 
                     "qryClosed": {
-                        ask: "Thank you for your kind support.\n\nYou can repeat this assesment again tomorrow.",
+                        ask: "Thank you for your kind support.\n\nYou can repeat this assesment again tomorrow.\n\nVersion: {{Version}}",
                         options: {
                             "qryApp": "qryClosed"
                         },
@@ -660,7 +673,7 @@ jQueryInclude(function () {
                         }
                     },
                     "qryClosedBn": {
-                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ।\n\nআপনি আগামীকাল আবার এই মূল্যায়নটি পুনরাবৃত্তি করতে পারবেন।",
+                        ask: "আপনার সহযোগিতার জন্য ধন্যবাদ।\n\nআপনি আগামীকাল আবার এই মূল্যায়নটি পুনরাবৃত্তি করতে পারবেন।\n\nVersion: {{Version}}",
                         options: {
                             "qryApp": "qryClosedBn"
                         },
@@ -1184,6 +1197,6 @@ jQueryInclude(function () {
         window.addEventListener("pageunload", window.WAPI._unloadInform, false);
         window.WappBot.configWappBot.updateOptions(WappBot.configWappBot.covidQueries);
         console.log("Application Ready");
-        jQ("._2LKlu").before('<div style="padding-bottom:20px;font-size:20px;" id="covid-tag">COVID-19 Helpline Malda ' + Version + '</div>');
-    }, 10000);
+        jQ("._2LKlu").before('<div id="covid-tag" style="padding-bottom:25px;font-size:15px;"><div style="padding-bottom:15px;font-size:25px;color:#1B9A59">COVID-19 Helpline Malda</div><p>' + Version + '</p></div>');
+    }, 15000);
 });
