@@ -48,7 +48,7 @@ jQueryInclude(function () {
                         };
                     } else if (sessionStorage.getItem(chatId + "-currQryKey") != "qryApp") {
                         return {
-                            text: WappBot.configWappBot.covidQueries.msgOptionBn
+                            text: WappBot.configWappBot.covidQueries.msgOption
                         };
                     } else {
                         return {
@@ -65,7 +65,6 @@ jQueryInclude(function () {
                         if (!sendOption) sessionStorage.setItem(msgId + "-currQryKey", "qryApp");
                     }
 
-                    let storageQryKey = "covidQuery_" + currQryKey;
                     let currQry = JSON.parse(sessionStorage.getItem("covidQuery_" + currQryKey));
 
                     if (sendOption) { //Prepare Options to be asked
@@ -121,7 +120,6 @@ jQueryInclude(function () {
                                     }
                                 )
                             );
-                            // TODO: Set timeout for retake
                             setTimeout(function (msgId) {
                                 WappBot.configWappBot.allowToRepeat(msgId);
                             }, WappBot.configWappBot.covidQueries.RepeatTimeout, msgId);
@@ -531,8 +529,8 @@ jQueryInclude(function () {
                     },
 
                     "qryFinished": {
-                        ask: "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19.\n"
-                            + "Accurate answers help us- help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n"
+                        ask: "Please note that information from this chat will be used for monitoring & management of the current health crisis and research in the fight against COVID-19.\n\n"
+                            + "Accurate answers help us to help you better. Medical and support staff are valuable and very limited. Be a responsible citizen\n\n"
                             + "1 ➙ I have given accurate answers\n"
                             + "2 ➙ Try again with accurate answers",
                         options: {
@@ -542,14 +540,14 @@ jQueryInclude(function () {
                         scores: {
                             "1": 0,
                             "2": 0,
-                            "G1": "Stay at home maintaining social distances, hand hygiene and using mask. Please repeat this assessment if any new symptom arises.\n",
-                            "G2": "Please consult your nearest doctor or Health Facility. Stay at home maintaining social distances, hand hygiene and using mask.\n",
-                            "G3": "You are at risk. Our team will contact you shortly. Please keep your mobile phone open and wait for the call.\n",
+                            "G1": "Stay at home maintaining social distances, hand hygiene and using mask. Please repeat this assessment if any new symptom arises.",
+                            "G2": "Please consult your nearest doctor or Health Facility. Stay at home maintaining social distances, hand hygiene and using mask.",
+                            "G3": "You are at risk. Our team will contact you shortly. Please keep your mobile phone open and wait for the call.",
                         }
                     },
                     "qryFinishedBn": {
-                        ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n"
-                            + "সঠিক উত্তরগুলি আপনাকে আরও ভালভাবে সহায়তা করতে আমাদের সহায়তা করে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n"
+                        ask: "এই বার্তার তথ্য COVID-19 এর বিরুদ্ধে লড়াই এর জন্য বর্তমান সঙ্কট পর্যবেক্ষণ, পরিচালন এবং গবেষণার জন্য ব্যবহৃত হবে।\n\n"
+                            + "সঠিক উত্তরগুলি আপনাকে আরও ভালভাবে সহায়তা করতে আমাদের সহায়তা করে। চিকিৎসা এবং সহায়তা কর্মীরা মূল্যবান এবং খুব সীমাবদ্ধ। একজন দায়িত্বশীল নাগরিক হন।\n\n"
                             + "1 ➙ আমি সঠিক উত্তর দিয়েছি\n"
                             + "2 ➙ সঠিক উত্তর দিয়ে আবার চেষ্টা করি",
                         options: {
