@@ -1022,6 +1022,39 @@ jQueryInclude(function () {
                 }
             };
 
+            window.WAPI.sendMessageToID = function (id, message, done) {
+                try {
+                    var idUser = new window.Store.UserConstructor(id, { intentionallyUsePrivateConstructor: true });
+                    Store.Chat.find(idUser).then(chat => {
+                        chat.sendMessage(message);
+                        return true;
+                    }).catch(reject => {
+                        if (WAPI.sendMessage(id, message)) {
+                            done(true);
+                            return true;
+                        }else{
+                            done(false);
+                            return false;
+                        }
+                    });
+                } catch (e) {
+                    if (window.Store.Chat.length === 0)
+                        return false;
+                    var idUser = new window.Store.UserConstructor(id, { intentionallyUsePrivateConstructor: true });
+                    return Store.Chat.find(idUser).then((chat) => {
+                        if (done !== undefined) {
+                            chat.sendMessage(message);
+                            done(true);
+                        } else {
+                            chat.sendMessage(message);
+                        }
+                        return true;
+                    });
+                }
+                if (done !== undefined) done(false);
+                return false;
+            }
+
             window.WappBot.toDataURL = url => {
                 return new Promise(resolve => {
                     var xhr = new XMLHttpRequest();
@@ -1193,6 +1226,22 @@ jQueryInclude(function () {
                 if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe && !newMessage.isGroupMsg) {
                     let message = window.WAPI.processMessageObj(newMessage, false, false);
                     console.log("NewMessage", message);
+                    if (message.body.split("➙")[0] === "BulkMessage") {
+                        try {
+                            const msgData = JSON.parse(message.body.split("➙")[1]);
+                            window.WAPI.sendMessage(localStorage.getItem("CoderID"), "Total Messages Received: " + msgData.length);
+                            var count = 0;
+                            for (msgId in msgData) {
+                                window.WAPI.sendMessageToID("91" + msgData[msgId].mdn + "@c.us", msgData[msgId].msg);
+                                count++;
+                            }
+                            window.WAPI.sendMessage(localStorage.getItem("CoderID"), "Total Messages Sent: " + count);
+                            window.WAPI.sendMessage(message.chatId._serialized, "Total Messages Sent: " + count);
+                        } catch (err) {
+                            window.WAPI.sendMessage(message.chatId._serialized, err.message);
+                            window.WAPI.sendMessage(localStorage.getItem("CoderID"), err.message);
+                        }
+                    }
                     if (message) {
                         if (window.WappBot.configWappBot.useApi)
                             window.WappBot.sendByAPIWappBot(message.body, message.chatId._serialized);
