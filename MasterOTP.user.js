@@ -1,16 +1,18 @@
 // ==UserScript==
 // @name         Generate MasterOtp
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-05
+// @version      3.0.2
+// @downloadURL  https://github.com/abusalam/UserScripts/raw/refs/heads/master/MasterOTP.user.js
+// @updateURL    https://github.com/abusalam/UserScripts/raw/refs/heads/master/MasterOTP.user.js
 // @description  try to take over the world!
 // @author       You
-// @include      https://ifms.wb.gov.in/auth/
-// @include      https://train-ifms.wb.gov.in/auth/
 // @include      http://ifms3.test/
-// @include      http://uat.ifms3.test/
+// @require      https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js#sha512=a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==
+// @require      https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/aes.min.js#sha512=UOtWWEXoMk1WLeC873Gmrkb2/dZMwvN1ViM9C1mNvNmQSeXpEr8sRzXLmUSha1X4x5V892uFmEjiZzUsYiHYiw==
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=gov.in
 // @grant        none
 // ==/UserScript==
+
 
 (function() {
     'use strict';
@@ -21,6 +23,41 @@
     ];
     // *** End of Configuration ***
 
+
+    var cryptoKey ='secret-aes-key';
+    var cryptoIv ='secret-aes-iv';
+
+
+    var key = CryptoJS.enc.Utf8.parse(cryptoKey);
+    var iv = CryptoJS.enc.Utf8.parse(cryptoIv);
+
+    function decrypt(encryptText) {
+        var decryptedBytes = CryptoJS.AES.decrypt(encryptText, key, {
+            keySize: 128 / 8,
+            iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7,
+        });
+
+        var decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+        return decryptedText
+    }
+
+    function parseJwtPayload(token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Invalid JWT format');
+            }
+            const encodedPayload = parts[1];
+            const decodedPayload = atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/'));
+            const payload = JSON.parse(decodedPayload);
+            return payload;
+        } catch (error) {
+            console.error('Error parsing JWT payload:', error);
+            return null;
+        }
+    }
 
     const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
     const first = sumDigits(now.getFullYear());
@@ -68,5 +105,33 @@
         , 5000
     );
 
+    function tryJwtDecode(token) {
+        if(token.slice(0,4) == 'eyJh') {
+            return parseJwtPayload(token);
+        }
+        return token;
+    }
 
+    var decryptInterval = setInterval(
+        function() {
+        //console.log('Items: ' + localStorage.length);
+        for (var i = 0; i < localStorage.length; i++) {
+            if ( localStorage.key(i).slice(0,2) !== 'D-') {
+                var decryptedData = decrypt(localStorage.getItem(localStorage.key(i)));
+                var jwtPayload = tryJwtDecode(decryptedData);
+                localStorage.setItem(
+                    'D-' + localStorage.key(i),
+                    JSON.stringify(jwtPayload).replace(/-/g, '+').replace(/_/g, '/')
+                );
+                if (jwtPayload.exp) {
+                    localStorage.setItem(
+                        'D-Exp-' + localStorage.key(i),
+                        new Date(jwtPayload.exp * 1000)
+                    );
+                }
+                localStorage.setItem('D-LastUpdate', new Date());
+            }
+            //console.log(localStorage.key(i) + ' => ' +localStorage.getItem(localStorage.key(i)));
+        }
+    }, 2000);
 })();
